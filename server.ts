@@ -1,12 +1,21 @@
 import express from "express";
 import { createServer as createViteServer } from "vite";
-import Database from "better-sqlite3";
+import { createClient } from "@supabase/supabase-js";
 import multer from "multer";
 import path from "path";
 import fs from "fs";
-import { products } from "./src/data/products";
-import { crateProducts } from "./src/data/wholesale";
-import { meetupEvents } from "./src/data/meetups";
+import dotenv from "dotenv";
+
+dotenv.config();
+
+const supabaseUrl = process.env.SUPABASE_URL || "";
+const supabaseAnonKey = process.env.SUPABASE_ANON_KEY || "";
+
+if (!supabaseUrl || !supabaseAnonKey) {
+  console.error("Missing SUPABASE_URL or SUPABASE_ANON_KEY in environment variables.");
+}
+
+const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 // Ensure src/images directory exists
 const imagesDir = path.join(process.cwd(), "src", "images");
@@ -25,77 +34,6 @@ const storage = multer.diskStorage({
 });
 
 const upload = multer({ storage: storage });
-
-// Initialize DB
-const db = new Database("database.sqlite");
-
-// Create tables
-db.exec(`
-  CREATE TABLE IF NOT EXISTS products (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name TEXT,
-    price REAL,
-    stock INTEGER,
-    category TEXT,
-    image TEXT,
-    size TEXT,
-    flavorProfile TEXT,
-    isPremium BOOLEAN
-  );
-
-  CREATE TABLE IF NOT EXISTS wholesale (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name TEXT,
-    qty TEXT,
-    price TEXT,
-    image TEXT,
-    description TEXT,
-    options TEXT
-  );
-
-  CREATE TABLE IF NOT EXISTS meetups (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    title TEXT,
-    date TEXT,
-    time TEXT,
-    description TEXT,
-    image TEXT
-  );
-`);
-
-// Seed data if empty
-const productCount = db.prepare("SELECT COUNT(*) as count FROM products").get() as { count: number };
-if (productCount.count === 0) {
-  const insertProduct = db.prepare("INSERT INTO products (name, price, stock, category, image, size, flavorProfile, isPremium) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
-  const insertProductTransaction = db.transaction((items) => {
-    for (const item of items) {
-      insertProduct.run(item.name, item.price, item.stock, item.category, item.image, item.size, JSON.stringify(item.flavorProfile || []), item.isPremium ? 1 : 0);
-    }
-  });
-  insertProductTransaction(products);
-}
-
-const wholesaleCount = db.prepare("SELECT COUNT(*) as count FROM wholesale").get() as { count: number };
-if (wholesaleCount.count === 0) {
-  const insertWholesale = db.prepare("INSERT INTO wholesale (name, qty, price, image, description, options) VALUES (?, ?, ?, ?, ?, ?)");
-  const insertWholesaleTransaction = db.transaction((items) => {
-    for (const item of items) {
-      insertWholesale.run(item.name, item.qty, item.price, item.image, item.description, JSON.stringify(item.options || []));
-    }
-  });
-  insertWholesaleTransaction(crateProducts);
-}
-
-const meetupCount = db.prepare("SELECT COUNT(*) as count FROM meetups").get() as { count: number };
-if (meetupCount.count === 0) {
-  const insertMeetup = db.prepare("INSERT INTO meetups (title, date, time, description, image) VALUES (?, ?, ?, ?, ?)");
-  const insertMeetupTransaction = db.transaction((items) => {
-    for (const item of items) {
-      insertMeetup.run(item.title, item.date, item.time, item.description, item.image || null);
-    }
-  });
-  insertMeetupTransaction(meetupEvents);
-}
 
 async function startServer() {
   const app = express();
@@ -117,62 +55,131 @@ async function startServer() {
   });
 
   // Products
-  app.get("/api/products", (req, res) => {
-    const rows = db.prepare("SELECT * FROM products").all() as any[];
-    res.json(rows.map(r => ({ ...r, flavorProfile: JSON.parse(r.flavorProfile), isPremium: Boolean(r.isPremium) })));
+  app.get("/api/products", async (req, res) => {
+    const { data, error } = await supabase.from("products").select("*");
+    if (error) return res.status(500).json({ error: error.message });
+    res.json(data.map(r => ({ 
+      ...r, 
+      flavorProfile: r.flavor_profile, // Map snake_case to camelCase if needed
+      isPremium: Boolean(r.is_premium) 
+    })));
   });
-  app.post("/api/products", (req, res) => {
+
+  app.post("/api/products", async (req, res) => {
     const { name, price, stock, category, image, size, flavorProfile, isPremium } = req.body;
-    const info = db.prepare("INSERT INTO products (name, price, stock, category, image, size, flavorProfile, isPremium) VALUES (?, ?, ?, ?, ?, ?, ?, ?)").run(name, price, stock, category, image, size, JSON.stringify(flavorProfile || []), isPremium ? 1 : 0);
-    res.json({ id: info.lastInsertRowid });
+    const { data, error } = await supabase.from("products").insert([{
+      name, 
+      price, 
+      stock, 
+      category, 
+      image, 
+      size, 
+      flavor_profile: flavorProfile || [], 
+      is_premium: isPremium 
+    }]).select();
+    if (error) return res.status(500).json({ error: error.message });
+    res.json({ id: data[0].id });
   });
-  app.put("/api/products/:id", (req, res) => {
+
+  app.put("/api/products/:id", async (req, res) => {
     const { name, price, stock, category, image, size, flavorProfile, isPremium } = req.body;
-    db.prepare("UPDATE products SET name=?, price=?, stock=?, category=?, image=?, size=?, flavorProfile=?, isPremium=? WHERE id=?").run(name, price, stock, category, image, size, JSON.stringify(flavorProfile || []), isPremium ? 1 : 0, req.params.id);
+    const { error } = await supabase.from("products").update({
+      name, 
+      price, 
+      stock, 
+      category, 
+      image, 
+      size, 
+      flavor_profile: flavorProfile || [], 
+      is_premium: isPremium 
+    }).eq("id", req.params.id);
+    if (error) return res.status(500).json({ error: error.message });
     res.json({ success: true });
   });
-  app.delete("/api/products/:id", (req, res) => {
-    db.prepare("DELETE FROM products WHERE id=?").run(req.params.id);
+
+  app.delete("/api/products/:id", async (req, res) => {
+    const { error } = await supabase.from("products").delete().eq("id", req.params.id);
+    if (error) return res.status(500).json({ error: error.message });
     res.json({ success: true });
   });
 
   // Wholesale
-  app.get("/api/wholesale", (req, res) => {
-    const rows = db.prepare("SELECT * FROM wholesale").all() as any[];
-    res.json(rows.map(r => ({ ...r, options: JSON.parse(r.options) })));
+  app.get("/api/wholesale", async (req, res) => {
+    const { data, error } = await supabase.from("wholesale").select("*");
+    if (error) return res.status(500).json({ error: error.message });
+    res.json(data);
   });
-  app.post("/api/wholesale", (req, res) => {
+
+  app.post("/api/wholesale", async (req, res) => {
     const { name, qty, price, image, description, options } = req.body;
-    const info = db.prepare("INSERT INTO wholesale (name, qty, price, image, description, options) VALUES (?, ?, ?, ?, ?, ?)").run(name, qty, price, image, description, JSON.stringify(options || []));
-    res.json({ id: info.lastInsertRowid });
+    const { data, error } = await supabase.from("wholesale").insert([{
+      name, 
+      qty, 
+      price, 
+      image, 
+      description, 
+      options: options || [] 
+    }]).select();
+    if (error) return res.status(500).json({ error: error.message });
+    res.json({ id: data[0].id });
   });
-  app.put("/api/wholesale/:id", (req, res) => {
+
+  app.put("/api/wholesale/:id", async (req, res) => {
     const { name, qty, price, image, description, options } = req.body;
-    db.prepare("UPDATE wholesale SET name=?, qty=?, price=?, image=?, description=?, options=? WHERE id=?").run(name, qty, price, image, description, JSON.stringify(options || []), req.params.id);
+    const { error } = await supabase.from("wholesale").update({
+      name, 
+      qty, 
+      price, 
+      image, 
+      description, 
+      options: options || [] 
+    }).eq("id", req.params.id);
+    if (error) return res.status(500).json({ error: error.message });
     res.json({ success: true });
   });
-  app.delete("/api/wholesale/:id", (req, res) => {
-    db.prepare("DELETE FROM wholesale WHERE id=?").run(req.params.id);
+
+  app.delete("/api/wholesale/:id", async (req, res) => {
+    const { error } = await supabase.from("wholesale").delete().eq("id", req.params.id);
+    if (error) return res.status(500).json({ error: error.message });
     res.json({ success: true });
   });
 
   // Meetups
-  app.get("/api/meetups", (req, res) => {
-    const rows = db.prepare("SELECT * FROM meetups").all();
-    res.json(rows);
+  app.get("/api/meetups", async (req, res) => {
+    const { data, error } = await supabase.from("meetups").select("*");
+    if (error) return res.status(500).json({ error: error.message });
+    res.json(data);
   });
-  app.post("/api/meetups", (req, res) => {
+
+  app.post("/api/meetups", async (req, res) => {
     const { title, date, time, description, image } = req.body;
-    const info = db.prepare("INSERT INTO meetups (title, date, time, description, image) VALUES (?, ?, ?, ?, ?)").run(title, date, time, description, image || null);
-    res.json({ id: info.lastInsertRowid });
+    const { data, error } = await supabase.from("meetups").insert([{
+      title, 
+      date, 
+      time, 
+      description, 
+      image: image || null 
+    }]).select();
+    if (error) return res.status(500).json({ error: error.message });
+    res.json({ id: data[0].id });
   });
-  app.put("/api/meetups/:id", (req, res) => {
+
+  app.put("/api/meetups/:id", async (req, res) => {
     const { title, date, time, description, image } = req.body;
-    db.prepare("UPDATE meetups SET title=?, date=?, time=?, description=?, image=? WHERE id=?").run(title, date, time, description, image || null, req.params.id);
+    const { error } = await supabase.from("meetups").update({
+      title, 
+      date, 
+      time, 
+      description, 
+      image: image || null 
+    }).eq("id", req.params.id);
+    if (error) return res.status(500).json({ error: error.message });
     res.json({ success: true });
   });
-  app.delete("/api/meetups/:id", (req, res) => {
-    db.prepare("DELETE FROM meetups WHERE id=?").run(req.params.id);
+
+  app.delete("/api/meetups/:id", async (req, res) => {
+    const { error } = await supabase.from("meetups").delete().eq("id", req.params.id);
+    if (error) return res.status(500).json({ error: error.message });
     res.json({ success: true });
   });
 
