@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 
 import FridgeGrid from '../components/FridgeGrid';
+import { supabase } from '../lib/supabase';
 
 export default function Products() {
   const [searchParams] = useSearchParams();
@@ -12,7 +13,19 @@ export default function Products() {
   const [products, setProducts] = useState<any[]>([]);
 
   useEffect(() => {
-    fetch('/api/products').then(res => res.json()).then(setProducts);
+    supabase.from('products').select('*').then(({ data, error }) => {
+      if (error) {
+        console.error("Error fetching products:", error);
+        return;
+      }
+      if (data) {
+        setProducts(data.map(r => ({
+          ...r,
+          flavorProfile: r.flavor_profile,
+          isPremium: Boolean(r.is_premium)
+        })));
+      }
+    });
   }, []);
 
   useEffect(() => {

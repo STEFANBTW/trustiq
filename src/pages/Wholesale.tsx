@@ -35,6 +35,9 @@ const eventOptions = [
   }
 ];
 
+import { supabase } from '../lib/supabase';
+
+// Wholesale.tsx
 export default function Wholesale() {
   const [formStep, setFormStep] = useState(1);
   const [selectedCrate, setSelectedCrate] = useState<any>(null);
@@ -44,7 +47,13 @@ export default function Wholesale() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    fetch('/api/wholesale').then(res => res.json()).then(setCrateProducts);
+    supabase.from('wholesale').select('*').then(({ data, error }) => {
+      if (error) {
+        console.error("Error fetching wholesale:", error);
+        return;
+      }
+      if (data) setCrateProducts(data);
+    });
   }, []);
 
   return (
