@@ -13,13 +13,14 @@ import {
   Box,
   ShieldCheck,
   X,
-  Upload
+  Upload,
+  Star
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { SettingsControls } from '../components/SettingsControls';
 import { supabase } from '../lib/supabase';
 
-type Tab = 'fridge' | 'wholesale' | 'meetups';
+type Tab = 'fridge' | 'wholesale' | 'meetups' | 'featured';
 
 export default function Admin() {
   const [activeTab, setActiveTab] = useState<Tab>('fridge');
@@ -296,6 +297,13 @@ export default function Admin() {
                   </td>
                   <td className="p-6 text-right">
                     <div className="flex items-center justify-end gap-2">
+                      <button 
+                        onClick={() => toggleFeatured(product)} 
+                        className={`p-2 transition-colors ${product.is_featured ? 'text-accent' : 'text-text-secondary hover:text-accent/50'}`}
+                        title={product.is_featured ? "Remove from Featured" : "Add to Featured"}
+                      >
+                        <Star size={16} fill={product.is_featured ? "currentColor" : "none"} />
+                      </button>
                       <button onClick={() => openProductModal(product)} className="p-2 hover:text-accent transition-colors"><Edit2 size={16} /></button>
                       <button onClick={() => deleteProduct(product.id)} className="p-2 hover:text-rose-500 transition-colors"><Trash2 size={16} /></button>
                     </div>
@@ -330,11 +338,84 @@ export default function Admin() {
               </div>
             </div>
             <div className="flex items-center justify-end gap-2 pt-3 border-t border-border-custom">
+              <button 
+                onClick={() => toggleFeatured(product)} 
+                className={`p-2 rounded-lg transition-colors ${product.is_featured ? 'bg-accent/10 text-accent' : 'bg-bg-primary text-text-secondary hover:text-accent'}`}
+              >
+                <Star size={16} fill={product.is_featured ? "currentColor" : "none"} />
+              </button>
               <button onClick={() => openProductModal(product)} className="p-2 bg-bg-primary rounded-lg text-text-secondary hover:text-accent transition-colors"><Edit2 size={16} /></button>
               <button onClick={() => deleteProduct(product.id)} className="p-2 bg-bg-primary rounded-lg text-text-secondary hover:text-rose-500 transition-colors"><Trash2 size={16} /></button>
             </div>
           </div>
         ))}
+      </div>
+    </div>
+  );
+
+  const toggleFeatured = async (product: any) => {
+    const isNowFeatured = !product.is_featured;
+    
+    if (isNowFeatured) {
+      const featuredCount = products.filter(p => p.is_featured).length;
+      if (featuredCount >= 4) {
+        alert("Maximum of 4 featured products allowed. Please remove one before adding another.");
+        return;
+      }
+    }
+
+    const { error } = await supabase
+      .from('products')
+      .update({ is_featured: isNowFeatured })
+      .eq('id', product.id);
+
+    if (error) {
+      alert("Error updating featured status: " + error.message);
+    } else {
+      fetchData();
+    }
+  };
+
+  const renderFeatured = () => (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div className="space-y-1">
+          <h2 className="text-2xl font-black uppercase italic tracking-tighter"><span className="text-accent">Featured</span> Selection</h2>
+          <p className="text-xs text-text-secondary uppercase tracking-widest font-bold">Maximum 4 products selected</p>
+        </div>
+        <div className="flex items-center gap-2 px-4 py-2 bg-bg-secondary border border-border-custom rounded-xl text-xs font-black uppercase tracking-widest">
+          <Star size={14} className="text-accent" fill="currentColor" /> {products.filter(p => p.is_featured).length} / 4
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {products.filter(p => p.is_featured).map((product) => (
+          <div key={product.id} className="bg-bg-secondary border border-accent/50 rounded-3xl p-6 shadow-xl relative overflow-hidden group">
+            <div className="absolute top-4 right-4">
+              <button 
+                onClick={() => toggleFeatured(product)}
+                className="p-2 bg-bg-primary border border-border-custom rounded-xl text-rose-500 hover:bg-rose-500 hover:text-white transition-all shadow-lg"
+              >
+                <X size={16} />
+              </button>
+            </div>
+            <div className="h-40 bg-bg-primary rounded-2xl flex items-center justify-center p-6 mb-6">
+              <img src={product.image} alt={product.name} className="h-full object-contain group-hover:scale-110 transition-transform" />
+            </div>
+            <div className="space-y-2">
+              <div className="text-[10px] text-accent font-black uppercase tracking-[0.2em]">{product.category}</div>
+              <h3 className="text-lg font-black uppercase italic tracking-tighter line-clamp-1">{product.name}</h3>
+              <div className="text-xl font-black">₦{product.price.toLocaleString()}</div>
+            </div>
+          </div>
+        ))}
+        {products.filter(p => p.is_featured).length === 0 && (
+          <div className="col-span-full py-24 text-center border-2 border-dashed border-border-custom rounded-3xl">
+            <Star size={48} className="mx-auto text-text-secondary opacity-20 mb-4" />
+            <p className="text-text-secondary font-black uppercase tracking-widest text-sm">No products featured yet</p>
+            <button onClick={() => setActiveTab('fridge')} className="mt-4 text-accent text-xs font-black uppercase tracking-widest hover:underline">Go to inventory to add featured products</button>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -446,6 +527,7 @@ export default function Admin() {
             { id: 'fridge', label: 'The Fridge', icon: <Box size={18} /> },
             { id: 'wholesale', label: 'Wholesale', icon: <Package size={18} /> },
             { id: 'meetups', label: 'Meetups', icon: <Calendar size={18} /> },
+            { id: 'featured', label: 'Featured Selection', icon: <Star size={18} /> },
           ].map((item) => (
             <button
               key={item.id}
@@ -531,6 +613,7 @@ export default function Admin() {
           {activeTab === 'fridge' && renderFridge()}
           {activeTab === 'wholesale' && renderWholesale()}
           {activeTab === 'meetups' && renderMeetups()}
+          {activeTab === 'featured' && renderFeatured()}
         </motion.div>
       </main>
 
@@ -540,6 +623,7 @@ export default function Admin() {
           { id: 'fridge', label: 'Fridge', icon: <Box size={20} /> },
           { id: 'wholesale', label: 'Wholesale', icon: <Package size={20} /> },
           { id: 'meetups', label: 'Meetups', icon: <Calendar size={20} /> },
+          { id: 'featured', label: 'Featured', icon: <Star size={20} /> },
         ].map((item) => (
           <button
             key={item.id}

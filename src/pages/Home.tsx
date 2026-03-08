@@ -2,15 +2,30 @@ import { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
 import { Wine, ArrowRight, Star, ShieldCheck, Zap, Crown, Users, Music, LayoutGrid, Droplets, Box, GlassWater } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import FridgeGrid from '../components/FridgeGrid';
+import { supabase } from '../lib/supabase';
 
 export default function Home() {
   const [featuredProducts, setFeaturedProducts] = useState<any[]>([]);
 
   useEffect(() => {
-    fetch('/api/products')
-      .then(res => res.json())
-      .then(data => setFeaturedProducts(data.slice(0, 4)));
+    supabase
+      .from('products')
+      .select('*')
+      .eq('is_featured', true)
+      .limit(4)
+      .then(({ data, error }) => {
+        if (error) {
+          console.error("Error fetching featured products:", error);
+          return;
+        }
+        if (data) {
+          setFeaturedProducts(data.map(r => ({
+            ...r,
+            flavorProfile: r.flavor_profile,
+            isPremium: Boolean(r.is_premium)
+          })));
+        }
+      });
   }, []);
   return (
     <div className="flex flex-col bg-bg-primary">
