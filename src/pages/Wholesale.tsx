@@ -80,7 +80,7 @@ export default function Wholesale() {
           initial={{ opacity: 0.9 }}
           animate={{ opacity: 0.6 }}
           transition={{ duration: 2, ease: "easeOut" }}
-          className="absolute inset-0 hidden dark:block bg-black/56 pointer-events-none" 
+          className="absolute inset-0 hidden dark:block bg-black/50 pointer-events-none" 
         />
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(245,158,11,0.1),transparent_70%)] pointer-events-none" />
         <div className="relative z-10 text-center px-6 max-w-7xl mx-auto w-full">
@@ -128,7 +128,7 @@ export default function Wholesale() {
               onClick={() => setSelectedCrate(crate)}
               className="group cursor-pointer bg-bg-secondary border border-border-custom rounded-2xl overflow-hidden hover:border-accent/50 transition-all duration-500 shadow-lg flex flex-col"
             >
-              <div className="relative h-32 sm:h-48 overflow-hidden shrink-0">
+              <div className="relative h-44 sm:h-56 overflow-hidden shrink-0">
                 <img src={crate.image} alt={crate.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" referrerPolicy="no-referrer" />
                 <div className="absolute inset-0 bg-gradient-to-t from-bg-secondary to-transparent opacity-60" />
                 <div className="absolute bottom-2 left-2 sm:bottom-4 sm:left-4 flex flex-wrap gap-1 sm:gap-2">

@@ -48,7 +48,7 @@ export default function FridgeGrid({ products }: FridgeGridProps) {
             </div>
 
             {/* Minimalist Grid */}
-            <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-8">
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-8">
               {shelf.items.map((item, iIdx) => (
                 <motion.div
                   key={iIdx}
@@ -73,8 +73,8 @@ export default function FridgeGrid({ products }: FridgeGridProps) {
                   />
 
                   {/* Product Image Container - Frosted Glass (Option 1) */}
-                  <div className="relative aspect-[3/4] w-full bg-white/10 dark:bg-black/20 backdrop-blur-lg rounded-2xl overflow-hidden border border-white/20 dark:border-white/10 transition-all duration-300 group-hover:border-accent/50 group-hover:shadow-[0_0_30px_rgba(245,158,11,0.15)]">
-                    <div className="absolute inset-0 flex items-center justify-center p-4 sm:p-8">
+                  <div className="relative aspect-[4/5] sm:aspect-[3/4] w-full bg-white/10 dark:bg-black/20 backdrop-blur-lg rounded-2xl overflow-hidden border border-white/20 dark:border-white/10 transition-all duration-300 group-hover:border-accent/50 group-hover:shadow-[0_0_30px_rgba(245,158,11,0.15)]">
+                    <div className="absolute inset-0 flex items-center justify-center p-2 sm:p-8">
                       <img 
                         src={item.image} 
                         alt={item.name}

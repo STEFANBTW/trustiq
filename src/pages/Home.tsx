@@ -51,7 +51,7 @@ export default function Home() {
           initial={{ opacity: 0.9 }}
           animate={{ opacity: 0.6 }}
           transition={{ duration: 2, ease: "easeOut" }}
-          className="absolute inset-0 hidden dark:block bg-black/56 pointer-events-none" 
+          className="absolute inset-0 hidden dark:block bg-black/50 pointer-events-none" 
         />
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(245,158,11,0.1),transparent_70%)] pointer-events-none" />
         
@@ -115,9 +115,9 @@ export default function Home() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: idx * 0.1 }}
-                className="group bg-bg-secondary border border-border-custom rounded-2xl sm:rounded-3xl overflow-hidden hover:border-accent/50 transition-all duration-500 shadow-lg flex flex-col h-[300px] sm:h-[500px]"
+                className="group bg-bg-secondary border border-border-custom rounded-2xl sm:rounded-3xl overflow-hidden hover:border-accent/50 transition-all duration-500 shadow-lg flex flex-col h-[350px] sm:h-[500px]"
               >
-                <div className="relative h-1/2 overflow-hidden bg-bg-primary flex items-center justify-center p-4 sm:p-8">
+                <div className="relative h-[65%] overflow-hidden bg-bg-primary flex items-center justify-center p-4 sm:p-8">
                   <img 
                     src={product.image} 
                     alt={product.name} 

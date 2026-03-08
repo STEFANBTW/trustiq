@@ -70,7 +70,7 @@ export default function Products() {
           initial={{ opacity: 0.9 }}
           animate={{ opacity: 0.6 }}
           transition={{ duration: 2, ease: "easeOut" }}
-          className="absolute inset-0 hidden dark:block bg-black/49 pointer-events-none" 
+          className="absolute inset-0 hidden dark:block bg-black/50 pointer-events-none" 
         />
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(245,158,11,0.1),transparent_70%)] pointer-events-none" />
         <div className="relative z-10 text-center px-6 max-w-7xl mx-auto w-full">

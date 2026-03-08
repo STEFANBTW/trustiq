@@ -320,36 +320,33 @@ export default function Admin() {
       </div>
 
       {/* Mobile Cards */}
-      <div className="md:hidden space-y-4">
+      <div className="md:hidden grid grid-cols-2 gap-3 sm:gap-4">
         {products.map((product) => (
-          <div key={product.id} className="bg-bg-secondary border border-border-custom rounded-2xl p-4 flex flex-col gap-4 shadow-lg">
-            <div className="flex items-center gap-4">
-              <div className="w-16 h-16 rounded-xl bg-bg-primary border border-border-custom overflow-hidden flex items-center justify-center p-2 shrink-0">
+          <div key={product.id} className="bg-bg-secondary border border-border-custom rounded-2xl p-3 flex flex-col gap-3 shadow-lg">
+            <div className="flex flex-col gap-3">
+              <div className="w-full h-32 rounded-xl bg-bg-primary border border-border-custom overflow-hidden flex items-center justify-center p-2 shrink-0">
                 <img src={product.image} alt={product.name} className="w-full h-full object-contain" referrerPolicy="no-referrer" />
               </div>
               <div className="flex-grow">
-                <div className="text-sm font-black text-text-primary">{product.name}</div>
-                <div className="text-[10px] text-text-secondary uppercase tracking-widest mb-1">{product.size}</div>
-                <span className="text-accent text-[8px] font-black uppercase tracking-widest">
-                  {product.category}
-                </span>
-              </div>
-              <div className="text-right">
-                <div className="text-sm font-black text-text-primary">₦{product.price.toLocaleString()}</div>
-                <div className="mt-1">
-                  <span className="text-xs font-black text-text-primary">{product.stock}</span>
+                <div className="text-[10px] font-black text-text-primary line-clamp-1">{product.name}</div>
+                <div className="text-[8px] text-text-secondary uppercase tracking-widest mb-1">{product.size}</div>
+                <div className="flex justify-between items-center">
+                  <span className="text-accent text-[8px] font-black uppercase tracking-widest">
+                    {product.category}
+                  </span>
+                  <div className="text-[10px] font-black text-text-primary">₦{product.price.toLocaleString()}</div>
                 </div>
               </div>
             </div>
-            <div className="flex items-center justify-end gap-2 pt-3 border-t border-border-custom">
+            <div className="flex items-center justify-end gap-1 pt-2 border-t border-border-custom">
               <button 
                 onClick={() => toggleFeatured(product)} 
-                className={`p-2 rounded-lg transition-colors ${product.is_featured ? 'bg-accent/10 text-accent' : 'bg-bg-primary text-text-secondary hover:text-accent'}`}
+                className={`p-1.5 rounded-lg transition-colors ${product.is_featured ? 'bg-accent/10 text-accent' : 'bg-bg-primary text-text-secondary hover:text-accent'}`}
               >
-                <Star size={16} fill={product.is_featured ? "currentColor" : "none"} />
+                <Star size={12} fill={product.is_featured ? "currentColor" : "none"} />
               </button>
-              <button onClick={() => openProductModal(product)} className="p-2 bg-bg-primary rounded-lg text-text-secondary hover:text-accent transition-colors"><Edit2 size={16} /></button>
-              <button onClick={() => deleteProduct(product.id)} className="p-2 bg-bg-primary rounded-lg text-text-secondary hover:text-rose-500 transition-colors"><Trash2 size={16} /></button>
+              <button onClick={() => openProductModal(product)} className="p-1.5 bg-bg-primary rounded-lg text-text-secondary hover:text-accent transition-colors"><Edit2 size={12} /></button>
+              <button onClick={() => deleteProduct(product.id)} className="p-1.5 bg-bg-primary rounded-lg text-text-secondary hover:text-rose-500 transition-colors"><Trash2 size={12} /></button>
             </div>
           </div>
         ))}
@@ -392,7 +389,7 @@ export default function Admin() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {products.filter(p => p.is_featured).map((product) => (
           <div key={product.id} className="bg-bg-secondary border border-accent/50 rounded-3xl p-6 shadow-xl relative overflow-hidden group">
             <div className="absolute top-4 right-4">
