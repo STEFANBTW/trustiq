@@ -1,0 +1,193 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+@import "tailwindcss";
+
+@layer base {
+  html {
+    font-size: 87.5%; /* Reduced base font size (14px) */
+    transition: font-size 0.3s ease;
+    overflow-x: clip;
+  }
+  
+  body {
+    overflow-x: clip;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  h1 { font-size: 5rem; line-height: 1; } 
+  h2 { font-size: 3.75rem; line-height: 1.1; }
+  h3 { font-size: 2.25rem; line-height: 1.2; }
+  h4 { font-size: 1.5rem; line-height: 1.3; }
+  p { font-size: 1rem; } 
+  
+  html.accessible-fonts {
+    font-size: 112.5%; /* Reduced accessible font size (18px) */
+  }
+
+  * {
+    scrollbar-width: none !important;
+    -ms-overflow-style: none !important;
+  }
+  
+  *::-webkit-scrollbar {
+    display: none !important;
+  }
+}
+
+@layer utilities {
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+}
+
+:root {
+  --bg-primary: #f9f8f6; /* stone-50 */
+  --bg-secondary: #ffffff;
+  --text-primary: #1c1917; /* stone-900 */
+  --text-secondary: #57534e; /* stone-600 */
+  --accent: #d97706; /* amber-600 */
+  --accent-glow: rgba(217, 119, 6, 0.3);
+  --border: #e7e5e4; /* stone-200 */
+  
+  /* Glass Effects - Light Mode (Light Blurs) */
+  --glass-filter-bg: rgba(255, 255, 255, 0.7);
+  --glass-filter-border: rgba(255, 255, 255, 0.5);
+  --glass-filter-blur: 24px;
+  --glass-card-bg: rgba(255, 255, 255, 0.4);
+  --glass-card-border: rgba(255, 255, 255, 0.3);
+}
+
+.dark {
+  --bg-primary: #0c0a09; /* stone-950 */
+  --bg-secondary: #1c1917; /* stone-900 */
+  --text-primary: #f5f5f4; /* stone-100 */
+  --text-secondary: #a8a29e; /* stone-400 */
+  --accent: #f59e0b; /* amber-500 */
+  --accent-glow: rgba(245, 158, 11, 0.5);
+  --border: #292524; /* stone-800 */
+  
+  /* Glass Effects - Dark Mode */
+  --glass-filter-bg: rgba(0, 0, 0, 0.4);
+  --glass-filter-border: rgba(255, 255, 255, 0.05);
+  --glass-filter-blur: 20px;
+  --glass-card-bg: rgba(255, 255, 255, 0.05);
+  --glass-card-border: rgba(255, 255, 255, 0.1);
+}
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --color-bg-primary: var(--bg-primary);
+  --color-bg-secondary: var(--bg-secondary);
+  --color-text-primary: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+  --color-accent: var(--accent);
+  --color-border-custom: var(--border);
+  
+  /* Custom Glass Colors */
+  --color-glass-filter: var(--glass-filter-bg);
+  --color-glass-filter-border: var(--glass-filter-border);
+  --color-glass-card: var(--glass-card-bg);
+  --color-glass-card-border: var(--glass-card-border);
+  
+  --animate-spin-slow: spin 8s linear infinite;
+}
+
+@layer utilities {
+  .fridge-shadow {
+    box-shadow: inset 0 0 150px rgba(0, 0, 0, 0.95), 0 20px 50px rgba(0,0,0,0.8);
+  }
+  .glass-edge {
+    background: linear-gradient(180deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 45%, rgba(0,0,0,0.2) 50%, rgba(0,0,0,0.4) 55%, rgba(255,255,255,0.02) 100%);
+    box-shadow: inset 0 1px 1px rgba(255,255,255,0.1), 0 4px 8px rgba(0,0,0,0.8);
+  }
+  .neon-glow-spot {
+    background: radial-gradient(circle at 50% 50%, var(--accent-glow) 0%, transparent 70%);
+  }
+  .shelf-label-neon {
+    text-shadow: 0 0 10px var(--accent-glow);
+  }
+  .glass-shelf {
+    background: linear-gradient(to bottom, rgba(255,255,255,0.1), rgba(255,255,255,0.02));
+    border-top: 1px solid rgba(255,255,255,0.2);
+    border-bottom: 2px solid rgba(0,0,0,0.5);
+    box-shadow: 0 15px 25px rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(10px);
+  }
+  .fridge-fog {
+    mask-image: radial-gradient(circle at center, black 40%, transparent 100%);
+  }
+  .item-glow-neon {
+    filter: drop-shadow(0 0 20px var(--accent-glow));
+  }
+  
+  .btn-cta {
+    position: relative;
+    overflow: hidden;
+    /* Remove background-color, move to ::after */
+    background-color: transparent;
+    border: none !important;
+    z-index: 1;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    
+    /* Standard Color Transition */
+    color: black !important;
+    /* Transition matches the wave fill duration */
+    transition: color 1s ease-in-out, transform 0.3s ease, box-shadow 0.3s ease;
+  }
+
+  /* Ensure text/icons are part of the parent context */
+  .btn-cta > * {
+    position: static;
+    z-index: auto;
+  }
+
+  /* The Orange Background (Base) */
+  .btn-cta::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: var(--accent);
+    z-index: -2; /* Behind everything */
+  }
+
+  /* The Rising Water Level (Dark Amber) */
+  .btn-cta::before {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 0%; /* Start empty */
+    background-color: #78350f; /* amber-900 (Dark Amber) */
+    transition: height 1s ease-in-out; /* Smooth 1s fill */
+    z-index: -1; /* Between Orange bg and Text */
+  }
+
+  /* Hover State - Fill the Cup */
+  .btn-cta:hover::before {
+    height: 100%; /* Fill to top */
+  }
+
+  /* Hover State - Slide Text Color */
+  .btn-cta:hover {
+    color: white !important;
+    transform: scale(1.05);
+    box-shadow: 0 0 25px var(--accent-glow);
+  }
+
+  /* Dark mode adjustments */
+  .dark .btn-cta {
+    /* No gradient needed */
+  }
+  .dark .btn-cta > * {
+    /* No mix-blend-mode */
+  }
+}
