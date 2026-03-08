@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { SettingsControls } from '../components/SettingsControls';
+import { supabase } from '../lib/supabase';
 
 type Tab = 'fridge' | 'wholesale' | 'meetups';
 
@@ -43,6 +44,8 @@ export default function Admin() {
   const [isUploading, setIsUploading] = useState(false);
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>, setForm: Function, formState: any) => {
+    // Note: Local upload backend is not persistent on Vercel. 
+    // Recommended: Use Image URLs directly or setup Supabase Storage.
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -55,12 +58,14 @@ export default function Admin() {
         method: 'POST',
         body: formData
       });
+      if (!res.ok) throw new Error("Upload failed");
       const data = await res.json();
       if (data.url) {
         setForm({ ...formState, image: data.url });
       }
     } catch (error) {
       console.error('Upload failed', error);
+      alert("Local upload failed. Please use an Image URL instead for now.");
     } finally {
       setIsUploading(false);
     }
@@ -72,14 +77,21 @@ export default function Admin() {
 
   const fetchData = async () => {
     try {
-      const [pRes, cRes, mRes] = await Promise.all([
-        fetch('/api/products'),
-        fetch('/api/wholesale'),
-        fetch('/api/meetups')
+      const [{ data: pData }, { data: cData }, { data: mData }] = await Promise.all([
+        supabase.from('products').select('*'),
+        supabase.from('wholesale').select('*'),
+        supabase.from('meetups').select('*')
       ]);
-      setProducts(await pRes.json());
-      setCrates(await cRes.json());
-      setMeetups(await mRes.json());
+
+      if (pData) {
+        setProducts(pData.map(r => ({
+          ...r,
+          flavorProfile: r.flavor_profile,
+          isPremium: Boolean(r.is_premium)
+        })));
+      }
+      if (cData) setCrates(cData);
+      if (mData) setMeetups(mData);
     } catch (error) {
       console.error('Error fetching data:', error);
     }
@@ -102,21 +114,41 @@ export default function Admin() {
   };
 
   const saveProduct = async () => {
-    const method = editingItem ? 'PUT' : 'POST';
-    const url = editingItem ? `/api/products/${editingItem.id}` : '/api/products';
-    await fetch(url, {
-      method,
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(productForm)
-    });
-    setProductModalOpen(false);
-    fetchData();
+    const payload = {
+      name: productForm.name,
+      price: productForm.price,
+      stock: productForm.stock,
+      category: productForm.category,
+      image: productForm.image,
+      size: productForm.size,
+      flavor_profile: (productForm as any).flavorProfile || [],
+      is_premium: (productForm as any).isPremium || false
+    };
+
+    let result;
+    if (editingItem) {
+      result = await supabase.from('products').update(payload).eq('id', editingItem.id);
+    } else {
+      result = await supabase.from('products').insert([payload]);
+    }
+
+    if (result.error) {
+      console.error("Error saving product:", result.error);
+      alert("Error saving product: " + result.error.message);
+    } else {
+      setProductModalOpen(false);
+      fetchData();
+    }
   };
 
   const deleteProduct = async (id: number) => {
     if (confirm('Are you sure you want to delete this product?')) {
-      await fetch(`/api/products/${id}`, { method: 'DELETE' });
-      fetchData();
+      const { error } = await supabase.from('products').delete().eq('id', id);
+      if (error) {
+        alert("Error deleting product: " + error.message);
+      } else {
+        fetchData();
+      }
     }
   };
 
@@ -124,7 +156,7 @@ export default function Admin() {
   const openCrateModal = (crate?: any) => {
     if (crate) {
       setEditingItem(crate);
-      setCrateForm({ ...crate, options: crate.options.join(', ') });
+      setCrateForm({ ...crate, options: (crate.options || []).join(', ') });
     } else {
       setEditingItem(null);
       setCrateForm({ name: '', qty: '', price: '', image: '', description: '', options: '' });
@@ -133,22 +165,39 @@ export default function Admin() {
   };
 
   const saveCrate = async () => {
-    const method = editingItem ? 'PUT' : 'POST';
-    const url = editingItem ? `/api/wholesale/${editingItem.id}` : '/api/wholesale';
-    const payload = { ...crateForm, options: crateForm.options.split(',').map(s => s.trim()) };
-    await fetch(url, {
-      method,
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    });
-    setCrateModalOpen(false);
-    fetchData();
+    const payload = {
+      name: crateForm.name,
+      qty: crateForm.qty,
+      price: crateForm.price,
+      image: crateForm.image,
+      description: crateForm.description,
+      options: crateForm.options.split(',').map(s => s.trim()).filter(s => s !== "")
+    };
+
+    let result;
+    if (editingItem) {
+      result = await supabase.from('wholesale').update(payload).eq('id', editingItem.id);
+    } else {
+      result = await supabase.from('wholesale').insert([payload]);
+    }
+
+    if (result.error) {
+      console.error("Error saving crate:", result.error);
+      alert("Error saving crate: " + result.error.message);
+    } else {
+      setCrateModalOpen(false);
+      fetchData();
+    }
   };
 
   const deleteCrate = async (id: number) => {
     if (confirm('Are you sure you want to delete this crate?')) {
-      await fetch(`/api/wholesale/${id}`, { method: 'DELETE' });
-      fetchData();
+      const { error } = await supabase.from('wholesale').delete().eq('id', id);
+      if (error) {
+        alert("Error deleting crate: " + error.message);
+      } else {
+        fetchData();
+      }
     }
   };
 
@@ -165,21 +214,38 @@ export default function Admin() {
   };
 
   const saveMeetup = async () => {
-    const method = editingItem ? 'PUT' : 'POST';
-    const url = editingItem ? `/api/meetups/${editingItem.id}` : '/api/meetups';
-    await fetch(url, {
-      method,
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(meetupForm)
-    });
-    setMeetupModalOpen(false);
-    fetchData();
+    const payload = {
+      title: meetupForm.title,
+      date: meetupForm.date,
+      time: meetupForm.time,
+      description: meetupForm.description,
+      image: meetupForm.image || null
+    };
+
+    let result;
+    if (editingItem) {
+      result = await supabase.from('meetups').update(payload).eq('id', editingItem.id);
+    } else {
+      result = await supabase.from('meetups').insert([payload]);
+    }
+
+    if (result.error) {
+      console.error("Error saving meetup:", result.error);
+      alert("Error saving meetup: " + result.error.message);
+    } else {
+      setMeetupModalOpen(false);
+      fetchData();
+    }
   };
 
   const deleteMeetup = async (id: number) => {
     if (confirm('Are you sure you want to delete this event?')) {
-      await fetch(`/api/meetups/${id}`, { method: 'DELETE' });
-      fetchData();
+      const { error } = await supabase.from('meetups').delete().eq('id', id);
+      if (error) {
+        alert("Error deleting meetup: " + error.message);
+      } else {
+        fetchData();
+      }
     }
   };
 
