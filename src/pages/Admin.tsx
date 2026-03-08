@@ -299,7 +299,11 @@ export default function Admin() {
                     <div className="flex items-center justify-end gap-2">
                       <button 
                         onClick={() => toggleFeatured(product)} 
-                        className={`p-2 transition-colors ${product.is_featured ? 'text-accent' : 'text-text-secondary hover:text-accent/50'}`}
+                        className={`p-2 rounded-xl border transition-all duration-300 ${
+                          product.is_featured 
+                            ? 'bg-accent/10 border-accent text-accent shadow-[0_0_15px_rgba(245,158,11,0.2)]' 
+                            : 'bg-transparent border-transparent text-text-secondary hover:text-accent hover:border-accent/30'
+                        }`}
                         title={product.is_featured ? "Remove from Featured" : "Add to Featured"}
                       >
                         <Star size={16} fill={product.is_featured ? "currentColor" : "none"} />
