@@ -301,8 +301,8 @@ export default function Admin() {
                       <button
                         onClick={() => toggleFeatured(product)}
                         className={`p-2 rounded-xl border transition-all duration-300 ${product.is_featured
-                            ? 'bg-accent/10 border-accent text-accent shadow-[0_0_15px_rgba(245,158,11,0.2)]'
-                            : 'bg-transparent border-transparent text-text-secondary hover:text-accent hover:border-accent/30'
+                          ? 'bg-accent/10 border-accent text-accent shadow-[0_0_15px_rgba(245,158,11,0.2)]'
+                          : 'bg-transparent border-transparent text-text-secondary hover:text-accent hover:border-accent/30'
                           }`}
                         title={product.is_featured ? "Remove from Featured" : "Add to Featured"}
                       >
@@ -534,8 +534,8 @@ export default function Admin() {
               key={item.id}
               onClick={() => setActiveTab(item.id as Tab)}
               className={`w-full flex items-center gap-4 px-6 py-4 rounded-2xl text-xs font-black uppercase tracking-widest transition-all ${activeTab === item.id
-                  ? 'bg-accent text-white dark:text-black shadow-xl shadow-accent/20'
-                  : 'text-text-secondary hover:bg-bg-primary hover:text-text-primary'
+                ? 'bg-accent text-white dark:text-black shadow-xl shadow-accent/20'
+                : 'text-text-secondary hover:bg-bg-primary hover:text-text-primary'
                 }`}
             >
               {item.icon} {item.label}
@@ -629,8 +629,8 @@ export default function Admin() {
             key={item.id}
             onClick={() => setActiveTab(item.id as Tab)}
             className={`flex flex-col items-center gap-1 p-2 rounded-xl transition-all ${activeTab === item.id
-                ? 'text-accent'
-                : 'text-text-secondary hover:text-text-primary'
+              ? 'text-accent'
+              : 'text-text-secondary hover:text-text-primary'
               }`}
           >
             {item.icon}
@@ -643,36 +643,74 @@ export default function Admin() {
       <AnimatePresence>
         {isProductModalOpen && (
           <motion.div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-            <motion.div initial={{ scale: 0.95 }} animate={{ scale: 1 }} exit={{ scale: 0.95 }} className="bg-bg-secondary border border-border-custom rounded-3xl p-6 w-full max-w-md">
+            <motion.div initial={{ scale: 0.95 }} animate={{ scale: 1 }} exit={{ scale: 0.95 }} className="bg-bg-secondary border border-border-custom rounded-3xl p-6 w-full max-w-5xl max-h-[90vh] overflow-y-auto no-scrollbar">
               <div className="flex justify-between items-center mb-6">
                 <h3 className="text-xl font-black uppercase italic tracking-tighter">{editingItem ? 'Edit Product' : 'Add Product'}</h3>
                 <button onClick={() => setProductModalOpen(false)} className="p-2 hover:bg-bg-primary rounded-xl"><X size={20} /></button>
               </div>
-              <div className="space-y-4">
-                <input type="text" placeholder="Name" value={productForm.name} onChange={e => setProductForm({ ...productForm, name: e.target.value })} className="w-full p-3 bg-bg-primary border border-border-custom rounded-xl" />
-                <div className="flex gap-4">
-                  <input type="number" placeholder="Price" value={productForm.price} onChange={e => setProductForm({ ...productForm, price: Number(e.target.value) })} className="w-full p-3 bg-bg-primary border border-border-custom rounded-xl" />
-                  <input type="number" placeholder="Stock" value={productForm.stock} onChange={e => setProductForm({ ...productForm, stock: Number(e.target.value) })} className="w-full p-3 bg-bg-primary border border-border-custom rounded-xl" />
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                {/* Left Side: Form Fields */}
+                <div className="space-y-4">
+                  <input type="text" placeholder="Name" value={productForm.name} onChange={e => setProductForm({ ...productForm, name: e.target.value })} className="w-full p-3 bg-bg-primary border border-border-custom rounded-xl" />
+                  <div className="flex gap-4">
+                    <input type="number" placeholder="Price" value={productForm.price} onChange={e => setProductForm({ ...productForm, price: Number(e.target.value) })} className="w-full p-3 bg-bg-primary border border-border-custom rounded-xl" />
+                    <input type="number" placeholder="Stock" value={productForm.stock} onChange={e => setProductForm({ ...productForm, stock: Number(e.target.value) })} className="w-full p-3 bg-bg-primary border border-border-custom rounded-xl" />
+                  </div>
+                  <input type="text" placeholder="Category" value={productForm.category} onChange={e => setProductForm({ ...productForm, category: e.target.value })} className="w-full p-3 bg-bg-primary border border-border-custom rounded-xl" />
+                  <input type="text" placeholder="Size" value={productForm.size} onChange={e => setProductForm({ ...productForm, size: e.target.value })} className="w-full p-3 bg-bg-primary border border-border-custom rounded-xl" />
+                  <div className="space-y-2">
+                    <label className="text-xs font-bold uppercase tracking-widest text-text-secondary">Image</label>
+                    <div className="flex gap-2">
+                      <input type="text" placeholder="Image URL" value={productForm.image} onChange={e => setProductForm({ ...productForm, image: e.target.value })} className="w-full p-3 bg-bg-primary border border-border-custom rounded-xl" />
+                      <label className="flex items-center justify-center px-4 bg-bg-primary border border-border-custom rounded-xl cursor-pointer hover:border-accent transition-colors shrink-0">
+                        {isUploading ? <div className="w-5 h-5 border-2 border-accent border-t-transparent rounded-full animate-spin" /> : <Upload size={20} className="text-text-secondary" />}
+                        <input type="file" accept="image/*" className="hidden" onChange={e => handleImageUpload(e, setProductForm, productForm)} disabled={isUploading} />
+                      </label>
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-xs font-bold uppercase tracking-widest text-text-secondary">3D Model (.glb)</label>
+                    <div className="flex gap-2">
+                      <input type="text" placeholder="3D Model URL (from Supabase)" value={productForm.model_3d_url} onChange={e => setProductForm({ ...productForm, model_3d_url: e.target.value })} className="w-full p-3 bg-bg-primary border border-border-custom rounded-xl" />
+                    </div>
+                  </div>
+                  <button onClick={saveProduct} className="w-full py-3 btn-cta text-white dark:text-black font-black uppercase tracking-widest rounded-xl">Save</button>
                 </div>
-                <input type="text" placeholder="Category" value={productForm.category} onChange={e => setProductForm({ ...productForm, category: e.target.value })} className="w-full p-3 bg-bg-primary border border-border-custom rounded-xl" />
-                <input type="text" placeholder="Size" value={productForm.size} onChange={e => setProductForm({ ...productForm, size: e.target.value })} className="w-full p-3 bg-bg-primary border border-border-custom rounded-xl" />
-                <div className="space-y-2">
-                  <label className="text-xs font-bold uppercase tracking-widest text-text-secondary">Image</label>
-                  <div className="flex gap-2">
-                    <input type="text" placeholder="Image URL" value={productForm.image} onChange={e => setProductForm({ ...productForm, image: e.target.value })} className="w-full p-3 bg-bg-primary border border-border-custom rounded-xl" />
-                    <label className="flex items-center justify-center px-4 bg-bg-primary border border-border-custom rounded-xl cursor-pointer hover:border-accent transition-colors shrink-0">
-                      {isUploading ? <div className="w-5 h-5 border-2 border-accent border-t-transparent rounded-full animate-spin" /> : <Upload size={20} className="text-text-secondary" />}
-                      <input type="file" accept="image/*" className="hidden" onChange={e => handleImageUpload(e, setProductForm, productForm)} disabled={isUploading} />
-                    </label>
+
+                {/* Right Side: Visual Preview */}
+                <div className="flex flex-col bg-bg-primary border border-border-custom rounded-3xl overflow-hidden h-full min-h-[300px] sm:min-h-[400px] relative">
+                  <div className="absolute top-4 left-4 z-20 px-3 py-1 bg-black/50 backdrop-blur-md rounded-full border border-white/10 text-[10px] font-black uppercase tracking-widest text-white">
+                    Live Preview
+                  </div>
+                  <div className="flex-grow w-full h-full flex items-center justify-center p-6 relative">
+                    {/* Spotlight behind model/image */}
+                    <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full bg-gradient-to-b from-accent/10 via-transparent to-transparent opacity-50 pointer-events-none z-0" />
+
+                    {productForm.model_3d_url ? (
+                      <model-viewer
+                        src={productForm.model_3d_url}
+                        alt="3D Preview"
+                        auto-rotate
+                        camera-controls
+                        camera-orbit="0deg 75deg 150%"
+                        shadow-intensity="1"
+                        style={{ width: '100%', height: '100%', backgroundColor: 'transparent', zIndex: 10 }}
+                      ></model-viewer>
+                    ) : productForm.image ? (
+                      <img
+                        src={productForm.image}
+                        alt="Preview"
+                        className="h-full object-contain drop-shadow-[0_10px_20px_rgba(0,0,0,0.5)] z-10"
+                        referrerPolicy="no-referrer"
+                      />
+                    ) : (
+                      <div className="text-text-secondary font-black uppercase tracking-widest text-sm opacity-30 z-10 text-center px-4">
+                        <Box size={48} className="mx-auto mb-4" />
+                        No Media Available
+                      </div>
+                    )}
                   </div>
                 </div>
-                <div className="space-y-2">
-                  <label className="text-xs font-bold uppercase tracking-widest text-text-secondary">3D Model (.glb)</label>
-                  <div className="flex gap-2">
-                    <input type="text" placeholder="3D Model URL (from Supabase)" value={productForm.model_3d_url} onChange={e => setProductForm({ ...productForm, model_3d_url: e.target.value })} className="w-full p-3 bg-bg-primary border border-border-custom rounded-xl" />
-                  </div>
-                </div>
-                <button onClick={saveProduct} className="w-full py-3 btn-cta text-white dark:text-black font-black uppercase tracking-widest rounded-xl">Save</button>
               </div>
             </motion.div>
           </motion.div>

@@ -37,26 +37,23 @@ export default function Home() {
           transition={{ duration: 20, ease: "linear", repeat: Infinity, repeatType: "reverse" }}
           src="https://images.unsplash.com/photo-1514362545857-3bc16c4c7d1b?auto=format&fit=crop&w=1920&q=80"
           alt="Premium Liquor Display"
-          className="absolute inset-0 w-full h-full object-cover opacity-15 dark:opacity-65 dark:brightness-65 transition-all duration-500"
+          className="absolute inset-0 w-full h-full object-cover transition-all duration-500"
           referrerPolicy="no-referrer"
         />
-        {/* Light Mode Edge Fades (White) */}
-        <div className="absolute inset-x-0 top-0 h-32 bg-gradient-to-b from-white to-white/0 dark:hidden pointer-events-none z-[1]" />
-        <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-white to-white/0 dark:hidden pointer-events-none z-[1]" />
-        <div className="absolute inset-y-0 left-0 w-32 bg-gradient-to-r from-white to-white/0 dark:hidden pointer-events-none z-[1]" />
-        <div className="absolute inset-y-0 right-0 w-32 bg-gradient-to-l from-white to-white/0 dark:hidden pointer-events-none z-[1]" />
-        
-        {/* Dark Mode Overlays */}
-        <motion.div 
-          initial={{ opacity: 0.9 }}
+
+        {/* Light Mode Overlay: White Radial Gradient */}
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_20%,white_90%)] dark:hidden pointer-events-none z-[1]" />
+
+        {/* Dark Mode Overlay: Minimal Dark Tint */}
+        <motion.div
+          initial={{ opacity: 0.8 }}
           animate={{ opacity: 0.6 }}
           transition={{ duration: 2, ease: "easeOut" }}
-          className="absolute inset-0 hidden dark:block bg-black/50 pointer-events-none" 
+          className="absolute inset-0 hidden dark:block bg-black pointer-events-none z-[1]"
         />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(245,158,11,0.1),transparent_70%)] pointer-events-none" />
-        
+
         <div className="relative z-10 text-center px-6 max-w-7xl mx-auto w-full">
-          <motion.h1 
+          <motion.h1
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
@@ -80,7 +77,7 @@ export default function Home() {
 
       {/* Marquee Ticker - Fridge Style */}
       <div className="overflow-hidden whitespace-nowrap bg-bg-secondary text-text-primary py-6 border-y border-border-custom relative z-20 backdrop-blur-md">
-        <motion.div 
+        <motion.div
           animate={{ x: [0, -1000] }}
           transition={{ repeat: Infinity, duration: 30, ease: "linear" }}
           className="inline-block font-black uppercase tracking-[0.3em] text-sm md:text-lg opacity-50"
@@ -106,7 +103,7 @@ export default function Home() {
               View All Products <ArrowRight size={16} />
             </Link>
           </div>
-          
+
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
             {featuredProducts.map((product, idx) => (
               <motion.div
@@ -118,9 +115,9 @@ export default function Home() {
                 className="group bg-bg-secondary border border-border-custom rounded-2xl sm:rounded-3xl overflow-hidden hover:border-accent/50 transition-all duration-500 shadow-lg flex flex-col h-[350px] sm:h-[500px]"
               >
                 <div className="relative h-[65%] overflow-hidden bg-bg-primary flex items-center justify-center p-4 sm:p-8">
-                  <img 
-                    src={product.image} 
-                    alt={product.name} 
+                  <img
+                    src={product.image}
+                    alt={product.name}
                     className="h-full object-contain group-hover:scale-110 transition-transform duration-700"
                     referrerPolicy="no-referrer"
                   />
@@ -141,12 +138,12 @@ export default function Home() {
                       ))}
                     </div>
                   </div>
-                  
+
                   <div className="pt-3 sm:pt-6 border-t border-border-custom flex items-center justify-between">
                     <div className="text-sm sm:text-2xl font-black text-accent">
                       ₦{product.price.toLocaleString()}
                     </div>
-                    <Link 
+                    <Link
                       to="/products"
                       className="p-1.5 sm:p-3 bg-bg-primary border border-border-custom hover:border-accent hover:text-accent rounded-full transition-all"
                     >
@@ -204,9 +201,9 @@ export default function Home() {
             </div>
           </div>
           <div className="relative h-[60vh] lg:h-auto overflow-hidden">
-            <img 
-              src="https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?auto=format&fit=crop&w=1000&q=80" 
-              alt="People celebrating" 
+            <img
+              src="https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?auto=format&fit=crop&w=1000&q=80"
+              alt="People celebrating"
               className="w-full h-full object-cover brightness-90 dark:brightness-75 hover:scale-105 transition-transform duration-1000"
               referrerPolicy="no-referrer"
             />
@@ -220,9 +217,9 @@ export default function Home() {
           <div className="relative h-[60vh] lg:h-auto overflow-hidden order-2 lg:order-1 p-8 lg:p-24 flex items-center justify-center">
             <div className="relative w-full h-full rounded-3xl overflow-hidden shadow-2xl">
               <div className="absolute inset-0 bg-gradient-to-t from-bg-primary via-transparent to-transparent z-10 transition-colors duration-300" />
-              <img 
-                src="https://images.unsplash.com/photo-1506377247377-2a5b3b417ebb?auto=format&fit=crop&w=1000&q=80" 
-                alt="High-end Wine Cellar" 
+              <img
+                src="https://images.unsplash.com/photo-1506377247377-2a5b3b417ebb?auto=format&fit=crop&w=1000&q=80"
+                alt="High-end Wine Cellar"
                 className="w-full h-full object-cover brightness-75 dark:brightness-50 hover:brightness-90 dark:hover:brightness-75 transition-all duration-700"
                 referrerPolicy="no-referrer"
               />
@@ -273,9 +270,9 @@ export default function Home() {
             </div>
           </div>
           <div className="relative h-[60vh] lg:h-auto overflow-hidden">
-            <img 
-              src="https://images.unsplash.com/photo-1536584754829-12214d404f52?auto=format&fit=crop&w=1000&q=80" 
-              alt="Gourmet Peanuts and Cashews" 
+            <img
+              src="https://images.unsplash.com/photo-1536584754829-12214d404f52?auto=format&fit=crop&w=1000&q=80"
+              alt="Gourmet Peanuts and Cashews"
               className="w-full h-full object-cover brightness-90 dark:brightness-50 transition-all duration-300"
               referrerPolicy="no-referrer"
             />
@@ -306,9 +303,9 @@ export default function Home() {
 
       {/* Section 7: Final CTA - Fridge Style */}
       <section className="relative min-h-screen px-8 bg-black text-white flex flex-col items-center justify-center text-center border-t border-border-custom overflow-hidden transition-colors duration-300">
-        <img 
-          src="https://images.unsplash.com/photo-1601598851547-4302969d0614?auto=format&fit=crop&w=1920&q=80" 
-          alt="Fridge full of drinks" 
+        <img
+          src="https://images.unsplash.com/photo-1601598851547-4302969d0614?auto=format&fit=crop&w=1920&q=80"
+          alt="Fridge full of drinks"
           className="absolute inset-0 w-full h-full object-cover opacity-40"
           referrerPolicy="no-referrer"
         />
