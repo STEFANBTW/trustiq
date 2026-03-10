@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { 
-  LayoutDashboard, 
-  Package, 
-  Calendar, 
-  Plus, 
-  Search, 
-  Edit2, 
-  Trash2, 
+import {
+  LayoutDashboard,
+  Package,
+  Calendar,
+  Plus,
+  Search,
+  Edit2,
+  Trash2,
   LogOut,
   Bell,
   Box,
@@ -39,7 +39,7 @@ export default function Admin() {
   const [editingItem, setEditingItem] = useState<any>(null);
 
   // Form States
-  const [productForm, setProductForm] = useState({ name: '', price: 0, stock: 0, category: '', image: '', size: '' });
+  const [productForm, setProductForm] = useState({ name: '', price: 0, stock: 0, category: '', image: '', size: '', model_3d_url: '' });
   const [crateForm, setCrateForm] = useState({ name: '', qty: '', price: '', image: '', description: '', options: '' });
   const [meetupForm, setMeetupForm] = useState({ title: '', date: '', time: '', description: '', image: '' });
   const [isUploading, setIsUploading] = useState(false);
@@ -106,10 +106,10 @@ export default function Admin() {
   const openProductModal = (product?: any) => {
     if (product) {
       setEditingItem(product);
-      setProductForm(product);
+      setProductForm({ ...product, model_3d_url: product.model_3d_url || '' });
     } else {
       setEditingItem(null);
-      setProductForm({ name: '', price: 0, stock: 0, category: '', image: '', size: '' });
+      setProductForm({ name: '', price: 0, stock: 0, category: '', image: '', size: '', model_3d_url: '' });
     }
     setProductModalOpen(true);
   };
@@ -122,6 +122,7 @@ export default function Admin() {
       category: productForm.category,
       image: productForm.image,
       size: productForm.size,
+      model_3d_url: productForm.model_3d_url || null,
       flavor_profile: (productForm as any).flavorProfile || [],
       is_premium: (productForm as any).isPremium || false
     };
@@ -297,13 +298,12 @@ export default function Admin() {
                   </td>
                   <td className="p-6 text-right">
                     <div className="flex items-center justify-end gap-2">
-                      <button 
-                        onClick={() => toggleFeatured(product)} 
-                        className={`p-2 rounded-xl border transition-all duration-300 ${
-                          product.is_featured 
-                            ? 'bg-accent/10 border-accent text-accent shadow-[0_0_15px_rgba(245,158,11,0.2)]' 
+                      <button
+                        onClick={() => toggleFeatured(product)}
+                        className={`p-2 rounded-xl border transition-all duration-300 ${product.is_featured
+                            ? 'bg-accent/10 border-accent text-accent shadow-[0_0_15px_rgba(245,158,11,0.2)]'
                             : 'bg-transparent border-transparent text-text-secondary hover:text-accent hover:border-accent/30'
-                        }`}
+                          }`}
                         title={product.is_featured ? "Remove from Featured" : "Add to Featured"}
                       >
                         <Star size={16} fill={product.is_featured ? "currentColor" : "none"} />
@@ -339,8 +339,8 @@ export default function Admin() {
               </div>
             </div>
             <div className="flex items-center justify-end gap-1 pt-2 border-t border-border-custom">
-              <button 
-                onClick={() => toggleFeatured(product)} 
+              <button
+                onClick={() => toggleFeatured(product)}
                 className={`p-1.5 rounded-lg transition-colors ${product.is_featured ? 'bg-accent/10 text-accent' : 'bg-bg-primary text-text-secondary hover:text-accent'}`}
               >
                 <Star size={12} fill={product.is_featured ? "currentColor" : "none"} />
@@ -356,7 +356,7 @@ export default function Admin() {
 
   const toggleFeatured = async (product: any) => {
     const isNowFeatured = !product.is_featured;
-    
+
     if (isNowFeatured) {
       const featuredCount = products.filter(p => p.is_featured).length;
       if (featuredCount >= 4) {
@@ -393,7 +393,7 @@ export default function Admin() {
         {products.filter(p => p.is_featured).map((product) => (
           <div key={product.id} className="bg-bg-secondary border border-accent/50 rounded-3xl p-6 shadow-xl relative overflow-hidden group">
             <div className="absolute top-4 right-4">
-              <button 
+              <button
                 onClick={() => toggleFeatured(product)}
                 className="p-2 bg-bg-primary border border-border-custom rounded-xl text-rose-500 hover:bg-rose-500 hover:text-white transition-all shadow-lg"
               >
@@ -533,11 +533,10 @@ export default function Admin() {
             <button
               key={item.id}
               onClick={() => setActiveTab(item.id as Tab)}
-              className={`w-full flex items-center gap-4 px-6 py-4 rounded-2xl text-xs font-black uppercase tracking-widest transition-all ${
-                activeTab === item.id 
-                  ? 'bg-accent text-white dark:text-black shadow-xl shadow-accent/20' 
+              className={`w-full flex items-center gap-4 px-6 py-4 rounded-2xl text-xs font-black uppercase tracking-widest transition-all ${activeTab === item.id
+                  ? 'bg-accent text-white dark:text-black shadow-xl shadow-accent/20'
                   : 'text-text-secondary hover:bg-bg-primary hover:text-text-primary'
-              }`}
+                }`}
             >
               {item.icon} {item.label}
             </button>
@@ -553,7 +552,7 @@ export default function Admin() {
                 <div className="text-[10px] text-text-secondary">Master Access</div>
               </div>
             </div>
-            <button 
+            <button
               onClick={handleLogout}
               className="w-full flex items-center justify-center gap-3 py-3 bg-rose-500/10 text-rose-500 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-rose-500 hover:text-white transition-all"
             >
@@ -577,7 +576,7 @@ export default function Admin() {
               </h1>
             </div>
             {/* Mobile Logout */}
-            <button 
+            <button
               onClick={handleLogout}
               className="lg:hidden p-3 bg-rose-500/10 text-rose-500 rounded-2xl hover:bg-rose-500 hover:text-white transition-all"
             >
@@ -589,8 +588,8 @@ export default function Admin() {
             <SettingsControls />
             <div className="relative flex-grow md:flex-grow-0">
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-text-secondary" size={18} />
-              <input 
-                type="text" 
+              <input
+                type="text"
                 placeholder="Search everything..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
@@ -629,11 +628,10 @@ export default function Admin() {
           <button
             key={item.id}
             onClick={() => setActiveTab(item.id as Tab)}
-            className={`flex flex-col items-center gap-1 p-2 rounded-xl transition-all ${
-              activeTab === item.id 
-                ? 'text-accent' 
+            className={`flex flex-col items-center gap-1 p-2 rounded-xl transition-all ${activeTab === item.id
+                ? 'text-accent'
                 : 'text-text-secondary hover:text-text-primary'
-            }`}
+              }`}
           >
             {item.icon}
             <span className="text-[10px] font-black uppercase tracking-widest">{item.label}</span>
@@ -651,21 +649,27 @@ export default function Admin() {
                 <button onClick={() => setProductModalOpen(false)} className="p-2 hover:bg-bg-primary rounded-xl"><X size={20} /></button>
               </div>
               <div className="space-y-4">
-                <input type="text" placeholder="Name" value={productForm.name} onChange={e => setProductForm({...productForm, name: e.target.value})} className="w-full p-3 bg-bg-primary border border-border-custom rounded-xl" />
+                <input type="text" placeholder="Name" value={productForm.name} onChange={e => setProductForm({ ...productForm, name: e.target.value })} className="w-full p-3 bg-bg-primary border border-border-custom rounded-xl" />
                 <div className="flex gap-4">
-                  <input type="number" placeholder="Price" value={productForm.price} onChange={e => setProductForm({...productForm, price: Number(e.target.value)})} className="w-full p-3 bg-bg-primary border border-border-custom rounded-xl" />
-                  <input type="number" placeholder="Stock" value={productForm.stock} onChange={e => setProductForm({...productForm, stock: Number(e.target.value)})} className="w-full p-3 bg-bg-primary border border-border-custom rounded-xl" />
+                  <input type="number" placeholder="Price" value={productForm.price} onChange={e => setProductForm({ ...productForm, price: Number(e.target.value) })} className="w-full p-3 bg-bg-primary border border-border-custom rounded-xl" />
+                  <input type="number" placeholder="Stock" value={productForm.stock} onChange={e => setProductForm({ ...productForm, stock: Number(e.target.value) })} className="w-full p-3 bg-bg-primary border border-border-custom rounded-xl" />
                 </div>
-                <input type="text" placeholder="Category" value={productForm.category} onChange={e => setProductForm({...productForm, category: e.target.value})} className="w-full p-3 bg-bg-primary border border-border-custom rounded-xl" />
-                <input type="text" placeholder="Size" value={productForm.size} onChange={e => setProductForm({...productForm, size: e.target.value})} className="w-full p-3 bg-bg-primary border border-border-custom rounded-xl" />
+                <input type="text" placeholder="Category" value={productForm.category} onChange={e => setProductForm({ ...productForm, category: e.target.value })} className="w-full p-3 bg-bg-primary border border-border-custom rounded-xl" />
+                <input type="text" placeholder="Size" value={productForm.size} onChange={e => setProductForm({ ...productForm, size: e.target.value })} className="w-full p-3 bg-bg-primary border border-border-custom rounded-xl" />
                 <div className="space-y-2">
                   <label className="text-xs font-bold uppercase tracking-widest text-text-secondary">Image</label>
                   <div className="flex gap-2">
-                    <input type="text" placeholder="Image URL" value={productForm.image} onChange={e => setProductForm({...productForm, image: e.target.value})} className="w-full p-3 bg-bg-primary border border-border-custom rounded-xl" />
+                    <input type="text" placeholder="Image URL" value={productForm.image} onChange={e => setProductForm({ ...productForm, image: e.target.value })} className="w-full p-3 bg-bg-primary border border-border-custom rounded-xl" />
                     <label className="flex items-center justify-center px-4 bg-bg-primary border border-border-custom rounded-xl cursor-pointer hover:border-accent transition-colors shrink-0">
                       {isUploading ? <div className="w-5 h-5 border-2 border-accent border-t-transparent rounded-full animate-spin" /> : <Upload size={20} className="text-text-secondary" />}
                       <input type="file" accept="image/*" className="hidden" onChange={e => handleImageUpload(e, setProductForm, productForm)} disabled={isUploading} />
                     </label>
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <label className="text-xs font-bold uppercase tracking-widest text-text-secondary">3D Model (.glb)</label>
+                  <div className="flex gap-2">
+                    <input type="text" placeholder="3D Model URL (from Supabase)" value={productForm.model_3d_url} onChange={e => setProductForm({ ...productForm, model_3d_url: e.target.value })} className="w-full p-3 bg-bg-primary border border-border-custom rounded-xl" />
                   </div>
                 </div>
                 <button onClick={saveProduct} className="w-full py-3 btn-cta text-white dark:text-black font-black uppercase tracking-widest rounded-xl">Save</button>
@@ -685,23 +689,23 @@ export default function Admin() {
                 <button onClick={() => setCrateModalOpen(false)} className="p-2 hover:bg-bg-primary rounded-xl"><X size={20} /></button>
               </div>
               <div className="space-y-4">
-                <input type="text" placeholder="Name" value={crateForm.name} onChange={e => setCrateForm({...crateForm, name: e.target.value})} className="w-full p-3 bg-bg-primary border border-border-custom rounded-xl" />
+                <input type="text" placeholder="Name" value={crateForm.name} onChange={e => setCrateForm({ ...crateForm, name: e.target.value })} className="w-full p-3 bg-bg-primary border border-border-custom rounded-xl" />
                 <div className="flex gap-4">
-                  <input type="text" placeholder="Quantity (e.g. 12 Bottles)" value={crateForm.qty} onChange={e => setCrateForm({...crateForm, qty: e.target.value})} className="w-full p-3 bg-bg-primary border border-border-custom rounded-xl" />
-                  <input type="text" placeholder="Price (e.g. ₦20)" value={crateForm.price} onChange={e => setCrateForm({...crateForm, price: e.target.value})} className="w-full p-3 bg-bg-primary border border-border-custom rounded-xl" />
+                  <input type="text" placeholder="Quantity (e.g. 12 Bottles)" value={crateForm.qty} onChange={e => setCrateForm({ ...crateForm, qty: e.target.value })} className="w-full p-3 bg-bg-primary border border-border-custom rounded-xl" />
+                  <input type="text" placeholder="Price (e.g. ₦20)" value={crateForm.price} onChange={e => setCrateForm({ ...crateForm, price: e.target.value })} className="w-full p-3 bg-bg-primary border border-border-custom rounded-xl" />
                 </div>
                 <div className="space-y-2">
                   <label className="text-xs font-bold uppercase tracking-widest text-text-secondary">Image</label>
                   <div className="flex gap-2">
-                    <input type="text" placeholder="Image URL" value={crateForm.image} onChange={e => setCrateForm({...crateForm, image: e.target.value})} className="w-full p-3 bg-bg-primary border border-border-custom rounded-xl" />
+                    <input type="text" placeholder="Image URL" value={crateForm.image} onChange={e => setCrateForm({ ...crateForm, image: e.target.value })} className="w-full p-3 bg-bg-primary border border-border-custom rounded-xl" />
                     <label className="flex items-center justify-center px-4 bg-bg-primary border border-border-custom rounded-xl cursor-pointer hover:border-accent transition-colors shrink-0">
                       {isUploading ? <div className="w-5 h-5 border-2 border-accent border-t-transparent rounded-full animate-spin" /> : <Upload size={20} className="text-text-secondary" />}
                       <input type="file" accept="image/*" className="hidden" onChange={e => handleImageUpload(e, setCrateForm, crateForm)} disabled={isUploading} />
                     </label>
                   </div>
                 </div>
-                <textarea placeholder="Description" value={crateForm.description} onChange={e => setCrateForm({...crateForm, description: e.target.value})} className="w-full p-3 bg-bg-primary border border-border-custom rounded-xl h-24" />
-                <input type="text" placeholder="Options (comma separated)" value={crateForm.options} onChange={e => setCrateForm({...crateForm, options: e.target.value})} className="w-full p-3 bg-bg-primary border border-border-custom rounded-xl" />
+                <textarea placeholder="Description" value={crateForm.description} onChange={e => setCrateForm({ ...crateForm, description: e.target.value })} className="w-full p-3 bg-bg-primary border border-border-custom rounded-xl h-24" />
+                <input type="text" placeholder="Options (comma separated)" value={crateForm.options} onChange={e => setCrateForm({ ...crateForm, options: e.target.value })} className="w-full p-3 bg-bg-primary border border-border-custom rounded-xl" />
                 <button onClick={saveCrate} className="w-full py-3 btn-cta text-white dark:text-black font-black uppercase tracking-widest rounded-xl">Save</button>
               </div>
             </motion.div>
@@ -719,22 +723,22 @@ export default function Admin() {
                 <button onClick={() => setMeetupModalOpen(false)} className="p-2 hover:bg-bg-primary rounded-xl"><X size={20} /></button>
               </div>
               <div className="space-y-4">
-                <input type="text" placeholder="Title" value={meetupForm.title} onChange={e => setMeetupForm({...meetupForm, title: e.target.value})} className="w-full p-3 bg-bg-primary border border-border-custom rounded-xl" />
+                <input type="text" placeholder="Title" value={meetupForm.title} onChange={e => setMeetupForm({ ...meetupForm, title: e.target.value })} className="w-full p-3 bg-bg-primary border border-border-custom rounded-xl" />
                 <div className="flex gap-4">
-                  <input type="text" placeholder="Date" value={meetupForm.date} onChange={e => setMeetupForm({...meetupForm, date: e.target.value})} className="w-full p-3 bg-bg-primary border border-border-custom rounded-xl" />
-                  <input type="text" placeholder="Time" value={meetupForm.time} onChange={e => setMeetupForm({...meetupForm, time: e.target.value})} className="w-full p-3 bg-bg-primary border border-border-custom rounded-xl" />
+                  <input type="text" placeholder="Date" value={meetupForm.date} onChange={e => setMeetupForm({ ...meetupForm, date: e.target.value })} className="w-full p-3 bg-bg-primary border border-border-custom rounded-xl" />
+                  <input type="text" placeholder="Time" value={meetupForm.time} onChange={e => setMeetupForm({ ...meetupForm, time: e.target.value })} className="w-full p-3 bg-bg-primary border border-border-custom rounded-xl" />
                 </div>
                 <div className="space-y-2">
                   <label className="text-xs font-bold uppercase tracking-widest text-text-secondary">Image (optional)</label>
                   <div className="flex gap-2">
-                    <input type="text" placeholder="Image URL" value={meetupForm.image} onChange={e => setMeetupForm({...meetupForm, image: e.target.value})} className="w-full p-3 bg-bg-primary border border-border-custom rounded-xl" />
+                    <input type="text" placeholder="Image URL" value={meetupForm.image} onChange={e => setMeetupForm({ ...meetupForm, image: e.target.value })} className="w-full p-3 bg-bg-primary border border-border-custom rounded-xl" />
                     <label className="flex items-center justify-center px-4 bg-bg-primary border border-border-custom rounded-xl cursor-pointer hover:border-accent transition-colors shrink-0">
                       {isUploading ? <div className="w-5 h-5 border-2 border-accent border-t-transparent rounded-full animate-spin" /> : <Upload size={20} className="text-text-secondary" />}
                       <input type="file" accept="image/*" className="hidden" onChange={e => handleImageUpload(e, setMeetupForm, meetupForm)} disabled={isUploading} />
                     </label>
                   </div>
                 </div>
-                <textarea placeholder="Description" value={meetupForm.description} onChange={e => setMeetupForm({...meetupForm, description: e.target.value})} className="w-full p-3 bg-bg-primary border border-border-custom rounded-xl h-24" />
+                <textarea placeholder="Description" value={meetupForm.description} onChange={e => setMeetupForm({ ...meetupForm, description: e.target.value })} className="w-full p-3 bg-bg-primary border border-border-custom rounded-xl h-24" />
                 <button onClick={saveMeetup} className="w-full py-3 btn-cta text-white dark:text-black font-black uppercase tracking-widest rounded-xl">Save</button>
               </div>
             </motion.div>
