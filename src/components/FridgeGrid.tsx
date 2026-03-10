@@ -13,6 +13,7 @@ interface Product {
   size: string;
   isPremium?: boolean;
   flavorProfile?: string[];
+  model_3d_url?: string;
 }
 
 interface FridgeGridProps {

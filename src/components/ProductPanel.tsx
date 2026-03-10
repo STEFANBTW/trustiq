@@ -13,6 +13,7 @@ interface Product {
   size: string;
   isPremium?: boolean;
   flavorProfile?: string[];
+  model_3d_url?: string;
 }
 
 interface ProductPanelProps {
@@ -88,25 +89,38 @@ export default function ProductPanel({ product, isOpen, onClose }: ProductPanelP
                   {/* Spotlight */}
                   <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full bg-gradient-to-b from-accent/10 via-transparent to-transparent opacity-50 pointer-events-none" />
                 
-                  <img 
-                    src={activeProduct.image} 
-                    alt={activeProduct.name}
-                    onError={(e) => {
-                      const target = e.target as HTMLImageElement;
-                      if (target.src.includes('unsplash')) return; // Already a placeholder
-                      if (activeProduct.name.toLowerCase().includes("fanta") || activeProduct.name.toLowerCase().includes("mirinda orange")) {
-                        target.src = "https://images.unsplash.com/photo-1625772299848-391b6a87d7b3?auto=format&fit=crop&w=400&q=80";
-                      } else if (activeProduct.name.toLowerCase().includes("sprite") || activeProduct.name.toLowerCase().includes("7up")) {
-                        target.src = "https://images.unsplash.com/photo-1513415564515-763d91423bdd?auto=format&fit=crop&w=400&q=80";
-                      } else if (activeProduct.name.toLowerCase().includes("pepsi")) {
-                        target.src = "https://images.unsplash.com/photo-1629203851122-3726ecdf080e?auto=format&fit=crop&w=400&q=80";
-                      } else {
-                        target.src = "https://images.unsplash.com/photo-1622483767028-3f66f32aef97?auto=format&fit=crop&w=400&q=80";
-                      }
-                    }}
-                    className="h-full object-contain drop-shadow-[0_10px_20px_rgba(0,0,0,0.5)] group-hover:scale-105 transition-transform duration-700 z-10"
-                    referrerPolicy="no-referrer"
-                  />
+                  {activeProduct.model_3d_url ? (
+                    <div className="w-full h-full z-10">
+                      <model-viewer
+                        src={activeProduct.model_3d_url}
+                        alt={activeProduct.name}
+                        auto-rotate
+                        camera-controls
+                        shadow-intensity="1"
+                        style={{ width: '100%', height: '100%', backgroundColor: 'transparent' }}
+                      ></model-viewer>
+                    </div>
+                  ) : (
+                    <img 
+                      src={activeProduct.image} 
+                      alt={activeProduct.name}
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement;
+                        if (target.src.includes('unsplash')) return; // Already a placeholder
+                        if (activeProduct.name.toLowerCase().includes("fanta") || activeProduct.name.toLowerCase().includes("mirinda orange")) {
+                          target.src = "https://images.unsplash.com/photo-1625772299848-391b6a87d7b3?auto=format&fit=crop&w=400&q=80";
+                        } else if (activeProduct.name.toLowerCase().includes("sprite") || activeProduct.name.toLowerCase().includes("7up")) {
+                          target.src = "https://images.unsplash.com/photo-1513415564515-763d91423bdd?auto=format&fit=crop&w=400&q=80";
+                        } else if (activeProduct.name.toLowerCase().includes("pepsi")) {
+                          target.src = "https://images.unsplash.com/photo-1629203851122-3726ecdf080e?auto=format&fit=crop&w=400&q=80";
+                        } else {
+                          target.src = "https://images.unsplash.com/photo-1622483767028-3f66f32aef97?auto=format&fit=crop&w=400&q=80";
+                        }
+                      }}
+                      className="h-full object-contain drop-shadow-[0_10px_20px_rgba(0,0,0,0.5)] group-hover:scale-105 transition-transform duration-700 z-10"
+                      referrerPolicy="no-referrer"
+                    />
+                  )}
                   
                   {activeProduct.isPremium && (
                     <div className="absolute bottom-4 right-4 bg-accent text-white dark:text-black text-[10px] sm:text-xs font-black uppercase tracking-widest px-2 py-1 sm:px-3 sm:py-1 rounded-full flex items-center gap-1 shadow-[0_0_15px_rgba(251,191,36,0.5)]">
