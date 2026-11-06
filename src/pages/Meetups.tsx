@@ -1,21 +1,12 @@
-import { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
 import { Car, Utensils, Info, Users, MapPin, Calendar, Clock, Music, Camera } from 'lucide-react';
 
-import { supabase } from '../lib/supabase';
+import { useInventory } from '../context/InventoryContext';
+import { meetupEvents } from '../data/meetups';
 
 export default function Meetups() {
-  const [events, setEvents] = useState<any[]>([]);
-
-  useEffect(() => {
-    supabase.from('meetups').select('*').then(({ data, error }) => {
-      if (error) {
-        console.error("Error fetching meetups:", error);
-        return;
-      }
-      if (data) setEvents(data);
-    });
-  }, []);
+  const { meetups } = useInventory();
+  const events = meetups && meetups.length > 0 && meetups[0].title ? meetups : meetupEvents;
 
   return (
     <div className="flex flex-col bg-bg-primary text-text-primary transition-colors duration-300">

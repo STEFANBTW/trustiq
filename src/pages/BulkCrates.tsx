@@ -1,24 +1,42 @@
 import { motion } from 'motion/react';
-import { Package, ArrowLeft, Search, Filter, ShoppingBag, Info } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { Package, ArrowLeft, Search, ShoppingBag, Info, Check } from 'lucide-react';
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { useInventory } from '../context/InventoryContext';
+import ProductPanel from '../components/ProductPanel';
 
 export default function BulkCrates() {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeCategory, setActiveCategory] = useState('All');
-  const [products, setProducts] = useState<any[]>([]);
+  const [addedId, setAddedId] = useState<number | null>(null);
+  const [selectedProduct, setSelectedProduct] = useState<any>(null);
+  const { fridge, addToCart } = useInventory();
 
-  useEffect(() => {
-    fetch('/api/products').then(res => res.json()).then(setProducts);
-  }, []);
+  const categories = ['All', ...Array.from(new Set(fridge.map(p => p.category)))];
 
-  const categories = ['All', ...Array.from(new Set(products.map(p => p.category)))];
-
-  const filteredProducts = products.filter(p => {
+  const filteredProducts = fridge.filter(p => {
     const matchesSearch = p.name.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesCategory = activeCategory === 'All' || p.category === activeCategory;
     return matchesSearch && matchesCategory;
   });
+
+  const handleAddCase = (product: typeof fridge[number]) => {
+    addToCart(
+      {
+        id: product.id + 1000,
+        name: `${product.name} (Bulk Case)`,
+        price: product.price * 10,
+        image: product.image,
+        category: 'Wholesale',
+        size: '12 / 24 Pack',
+      },
+      1
+    );
+    setAddedId(product.id);
+    window.setTimeout(() => {
+      setAddedId((curr) => (curr === product.id ? null : curr));
+    }, 1200);
+  };
 
   return (
     <div className="min-h-screen bg-bg-primary text-text-primary transition-colors duration-300">
@@ -59,8 +77,9 @@ export default function BulkCrates() {
           {categories.map(cat => (
             <button
               key={cat}
+              type="button"
               onClick={() => setActiveCategory(cat)}
-              className={`px-6 py-2 rounded-full text-xs font-bold uppercase tracking-widest whitespace-nowrap transition-all border ${
+              className={`px-6 py-2 rounded-full text-xs font-bold uppercase tracking-widest whitespace-nowrap transition-all border cursor-pointer ${
                 activeCategory === cat 
                   ? 'bg-accent text-white dark:text-black border-accent' 
                   : 'bg-bg-secondary text-text-secondary border-border-custom hover:border-accent hover:text-text-primary'
@@ -75,59 +94,81 @@ export default function BulkCrates() {
       {/* Grid */}
       <main className="py-16 px-4 sm:px-8 max-w-7xl mx-auto">
         <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-8">
-          {filteredProducts.map((product, idx) => (
-            <motion.div
-              key={product.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: idx * 0.05 }}
-              className="group bg-bg-secondary border border-border-custom rounded-2xl sm:rounded-3xl overflow-hidden hover:border-accent/50 transition-all duration-500 shadow-lg flex flex-col"
-            >
-              <div className="relative h-32 sm:h-64 overflow-hidden bg-bg-primary shrink-0">
-                <img 
-                  src={product.image} 
-                  alt={product.name} 
-                  className="w-full h-full object-contain p-4 sm:p-8 group-hover:scale-110 transition-transform duration-700"
-                  referrerPolicy="no-referrer"
-                />
-                <div className="absolute top-2 right-2 sm:top-4 sm:right-4 px-1.5 py-0.5 sm:px-3 sm:py-1 bg-accent text-white dark:text-black text-[8px] sm:text-xs font-black uppercase rounded-full">
-                  Bulk Case
-                </div>
-              </div>
-              <div className="p-3 sm:p-8 flex-grow flex flex-col space-y-2 sm:space-y-4">
-                <div className="space-y-1">
-                  <div className="text-[8px] sm:text-xs font-bold uppercase tracking-widest text-accent">{product.category}</div>
-                  <h3 className="text-xs sm:text-xl font-black uppercase tracking-tight text-text-primary leading-tight line-clamp-2">{product.name}</h3>
-                </div>
-                
-                <div className="flex-grow">
-                  <p className="text-[10px] sm:text-xs text-text-secondary line-clamp-2">
-                    Available in standard 12 or 24 unit bulk packaging. Perfect for events and high-volume restocking.
-                  </p>
-                </div>
-
-                <div className="pt-2 sm:pt-4 border-t border-border-custom flex items-center justify-between">
-                  <div className="space-y-0.5 sm:space-y-1">
-                    <div className="text-[8px] sm:text-xs font-bold uppercase tracking-widest text-text-secondary">Bulk Price</div>
-                    <div className="text-sm sm:text-xl font-black text-text-primary">₦{(product.price * 10).toLocaleString()}</div>
-                  </div>
-                  <div className="text-right space-y-0.5 sm:space-y-1">
-                    <div className="text-[8px] sm:text-xs font-bold uppercase tracking-widest text-text-secondary">Units</div>
-                    <div className="text-[10px] sm:text-sm font-black text-accent">12 / 24 Pack</div>
+          {filteredProducts.map((product, idx) => {
+            const isAdded = addedId === product.id;
+            return (
+              <motion.div
+                key={product.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: idx * 0.05 }}
+                className="group bg-bg-secondary border border-border-custom rounded-2xl sm:rounded-3xl overflow-hidden hover:border-accent/50 transition-all duration-500 shadow-lg flex flex-col"
+              >
+                <div className="relative h-36 sm:h-64 overflow-hidden bg-bg-primary shrink-0 p-1 sm:p-1.5">
+                  <img 
+                    src={product.image} 
+                    alt={product.name} 
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1551024709-8f23befc6f87?auto=format&fit=crop&w=600&q=80';
+                    }}
+                    className="w-full h-full object-cover rounded-xl group-hover:scale-105 transition-transform duration-700"
+                    referrerPolicy="no-referrer"
+                  />
+                  <div className="absolute top-2.5 right-2.5 sm:top-4 sm:right-4 px-1.5 py-0.5 sm:px-3 sm:py-1 bg-accent text-white dark:text-black text-[8px] sm:text-xs font-black uppercase rounded-full shadow-md">
+                    Bulk Case
                   </div>
                 </div>
+                <div className="p-3 sm:p-8 flex-grow flex flex-col space-y-2 sm:space-y-4">
+                  <div className="space-y-1">
+                    <div className="text-[8px] sm:text-xs font-bold uppercase tracking-widest text-accent">{product.category}</div>
+                    <h3 className="text-xs sm:text-xl font-black uppercase tracking-tight text-text-primary leading-tight line-clamp-2">{product.name}</h3>
+                  </div>
+                  
+                  <div className="flex-grow">
+                    <p className="text-[10px] sm:text-xs text-text-secondary line-clamp-2">
+                      Available in standard 12 or 24 unit bulk packaging. Perfect for events and high-volume restocking.
+                    </p>
+                  </div>
 
-                <div className="grid grid-cols-2 gap-1.5 sm:gap-3 pt-2 sm:pt-4">
-                  <button className="py-2 sm:py-3 btn-cta text-white dark:text-black font-black uppercase tracking-widest text-[8px] sm:text-xs rounded-lg sm:rounded-xl hover:scale-105 hover:brightness-110 active:scale-95 transition-all flex items-center justify-center gap-1 sm:gap-2">
-                    <ShoppingBag className="w-3 h-3 sm:w-[14px] sm:h-[14px]" /> Add Case
-                  </button>
-                  <button className="py-2 sm:py-3 bg-bg-primary border border-border-custom hover:border-accent hover:text-accent font-black uppercase tracking-widest text-[8px] sm:text-xs rounded-lg sm:rounded-xl transition-all flex items-center justify-center gap-1 sm:gap-2">
-                    <Info className="w-3 h-3 sm:w-[14px] sm:h-[14px]" /> Details
-                  </button>
+                  <div className="pt-2 sm:pt-4 border-t border-border-custom flex items-center justify-between">
+                    <div className="space-y-0.5 sm:space-y-1">
+                      <div className="text-[8px] sm:text-xs font-bold uppercase tracking-widest text-text-secondary">Bulk Price</div>
+                      <div className="text-sm sm:text-xl font-black text-text-primary">₦{(product.price * 10).toLocaleString()}</div>
+                    </div>
+                    <div className="text-right space-y-0.5 sm:space-y-1">
+                      <div className="text-[8px] sm:text-xs font-bold uppercase tracking-widest text-text-secondary">Units</div>
+                      <div className="text-[10px] sm:text-sm font-black text-accent">12 / 24 Pack</div>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-1.5 sm:gap-3 pt-2 sm:pt-4">
+                    <button
+                      type="button"
+                      onClick={() => handleAddCase(product)}
+                      className="btn-cta py-2 sm:py-3 font-black uppercase tracking-widest text-[8px] sm:text-xs rounded-lg sm:rounded-xl flex items-center justify-center gap-1 sm:gap-2 cursor-pointer"
+                    >
+                      {isAdded ? (
+                        <>
+                          <Check className="w-3 h-3 sm:w-[14px] sm:h-[14px]" /> <span>Added!</span>
+                        </>
+                      ) : (
+                        <>
+                          <ShoppingBag className="w-3 h-3 sm:w-[14px] sm:h-[14px]" /> <span>Add Case</span>
+                        </>
+                      )}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setSelectedProduct(product)}
+                      className="btn-cta-secondary py-2 sm:py-3 border border-border-custom font-black uppercase tracking-widest text-[8px] sm:text-xs rounded-lg sm:rounded-xl flex items-center justify-center gap-1 sm:gap-2 cursor-pointer"
+                    >
+                      <Info className="w-3 h-3 sm:w-[14px] sm:h-[14px]" /> <span>Details</span>
+                    </button>
+                  </div>
                 </div>
-              </div>
-            </motion.div>
-          ))}
+              </motion.div>
+            );
+          })}
         </div>
 
         {filteredProducts.length === 0 && (
@@ -148,11 +189,17 @@ export default function BulkCrates() {
           <p className="text-text-secondary">
             For orders exceeding 50 crates, we offer specialized logistics and even deeper discounts. Contact our wholesale desk directly.
           </p>
-          <button className="px-6 py-3 md:px-12 md:py-5 bg-bg-primary border border-border-custom hover:border-accent hover:text-accent text-text-primary text-xs md:text-sm font-black uppercase tracking-widest rounded-full transition-all">
-            Contact Wholesale Desk
-          </button>
+          <Link to="/contact" className="btn-cta-secondary inline-block px-6 py-3 md:px-12 md:py-5 border border-border-custom text-xs md:text-sm font-black uppercase tracking-widest rounded-full">
+            <span>Contact Wholesale Desk</span>
+          </Link>
         </div>
       </section>
+
+      <ProductPanel
+        product={selectedProduct}
+        isOpen={!!selectedProduct}
+        onClose={() => setSelectedProduct(null)}
+      />
     </div>
   );
 }

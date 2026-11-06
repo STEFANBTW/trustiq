@@ -1,46 +1,75 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
-  ShoppingBag, 
   CreditCard, 
   Truck, 
   ShieldCheck, 
   ArrowLeft, 
   ArrowRight, 
   CheckCircle2, 
-  X,
   MapPin,
   Phone,
-  Mail,
   Lock,
-  Plus,
-  Minus,
   Users
 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
-
-const cartItems = [
-  { id: 1, name: "Gold Label Whiskey", price: 20, qty: 1, image: "https://images.unsplash.com/photo-1569529465841-dfecdab7503b?auto=format&fit=crop&w=400&q=80" },
-  { id: 2, name: "Coca-Cola Classic Crate", price: 20, qty: 2, image: "https://images.unsplash.com/photo-1622483767028-3f66f32aef97?auto=format&fit=crop&w=400&q=80" },
-];
+import { useInventory } from '../context/InventoryContext';
 
 export default function Checkout() {
   const [step, setStep] = useState(1);
   const [paymentMethod, setPaymentMethod] = useState('card');
+  const [orderCompleted, setOrderCompleted] = useState(false);
   const navigate = useNavigate();
+  const { cart, cartSubtotal, clearCart } = useInventory();
 
-  const subtotal = cartItems.reduce((acc, item) => acc + (item.price * item.qty), 0);
-  const shipping = 5000;
-  const total = subtotal + shipping;
+  const shipping = cart.length > 0 ? 5000 : 0;
+  const total = cartSubtotal + shipping;
 
   const handleNext = () => {
-    if (step < 3) setStep(step + 1);
-    else {
-      // Complete order
-      alert('Order Placed Successfully!');
-      navigate('/dashboard');
+    if (step < 3) {
+      setStep(step + 1);
+    } else {
+      setOrderCompleted(true);
+      clearCart();
     }
   };
+
+  if (orderCompleted) {
+    return (
+      <div className="min-h-[80vh] bg-bg-primary text-text-primary flex items-center justify-center px-4 py-24">
+        <div className="max-w-lg w-full bg-bg-secondary border border-border-custom rounded-[2.5rem] p-8 sm:p-12 text-center space-y-6 shadow-2xl">
+          <div className="w-20 h-20 rounded-full bg-accent/15 border border-accent/30 text-accent flex items-center justify-center mx-auto">
+            <CheckCircle2 size={40} />
+          </div>
+          <div className="space-y-2">
+            <span className="text-[10px] font-black uppercase tracking-[0.3em] text-accent">
+              Order Confirmed
+            </span>
+            <h2 className="text-3xl sm:text-4xl font-black uppercase italic tracking-tighter">
+              Pour Incoming!
+            </h2>
+            <p className="text-sm text-text-secondary leading-relaxed">
+              Your chilled selection has been dispatched to our fulfillment team. Track your order status in your account portal.
+            </p>
+          </div>
+          <div className="flex flex-col sm:flex-row gap-3 pt-4">
+            <Link
+              to="/products"
+              className="btn-cta-secondary flex-1 py-3.5 px-6 border border-border-custom rounded-xl text-xs font-black uppercase tracking-widest flex items-center justify-center"
+            >
+              <span>Back To Fridge</span>
+            </Link>
+            <Link
+              to="/dashboard"
+              className="btn-cta flex-1 py-3.5 px-6 rounded-xl text-xs font-black uppercase tracking-widest flex items-center justify-center shadow-lg"
+            >
+              <span>View Portal</span>
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-bg-primary text-text-primary pt-32 pb-24 transition-colors duration-300">
@@ -49,7 +78,7 @@ export default function Checkout() {
         <div className="max-w-3xl mx-auto mb-16">
           <div className="flex items-center justify-between relative">
             <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 h-px bg-border-custom z-0" />
-            <div className={`absolute inset-y-0 left-0 bg-accent h-px z-0 transition-all duration-500`} style={{ width: `${(step - 1) * 50}%` }} />
+            <div className="absolute inset-y-0 left-0 bg-accent h-px z-0 transition-all duration-500" style={{ width: `${(step - 1) * 50}%` }} />
             
             {[
               { id: 1, label: 'Shipping', icon: <Truck size={18} /> },
@@ -127,8 +156,9 @@ export default function Checkout() {
                     ].map((method) => (
                       <button
                         key={method.id}
+                        type="button"
                         onClick={() => setPaymentMethod(method.id)}
-                        className={`p-8 rounded-3xl border-2 transition-all flex flex-col items-center gap-4 text-center ${
+                        className={`p-8 rounded-3xl border-2 transition-all flex flex-col items-center gap-4 text-center cursor-pointer ${
                           paymentMethod === method.id 
                             ? 'bg-accent/5 border-accent text-accent shadow-lg shadow-accent/10' 
                             : 'bg-bg-primary border-border-custom text-text-secondary hover:border-accent/30'
@@ -187,7 +217,7 @@ export default function Checkout() {
                           <div className="text-sm font-black text-text-primary">Victoria Island, Lagos</div>
                         </div>
                       </div>
-                      <button onClick={() => setStep(1)} className="text-xs font-black uppercase tracking-widest text-accent hover:underline">Edit</button>
+                      <button type="button" onClick={() => setStep(1)} className="text-xs font-black uppercase tracking-widest text-accent hover:underline cursor-pointer">Edit</button>
                     </div>
 
                     <div className="p-6 bg-bg-primary border border-border-custom rounded-3xl flex items-center justify-between">
@@ -200,7 +230,7 @@ export default function Checkout() {
                           <div className="text-sm font-black text-text-primary">Visa ending in 4242</div>
                         </div>
                       </div>
-                      <button onClick={() => setStep(2)} className="text-xs font-black uppercase tracking-widest text-accent hover:underline">Edit</button>
+                      <button type="button" onClick={() => setStep(2)} className="text-xs font-black uppercase tracking-widest text-accent hover:underline cursor-pointer">Edit</button>
                     </div>
                   </div>
 
@@ -216,16 +246,18 @@ export default function Checkout() {
 
             <div className="flex items-center justify-between pt-8">
               <button 
+                type="button"
                 onClick={() => step > 1 ? setStep(step - 1) : navigate('/cart')}
-                className="flex items-center gap-3 text-xs font-black uppercase tracking-widest text-text-secondary hover:text-text-primary transition-colors"
+                className="flex items-center gap-3 text-xs font-black uppercase tracking-widest text-text-secondary hover:text-text-primary transition-colors cursor-pointer"
               >
                 <ArrowLeft size={16} /> Back
               </button>
               <button 
+                type="button"
                 onClick={handleNext}
-                className="px-6 py-3 md:px-12 md:py-5 btn-cta text-white dark:text-black font-black uppercase tracking-widest rounded-2xl hover:scale-105 hover:brightness-110 active:scale-95 transition-all shadow-xl shadow-accent/20 flex items-center gap-3 group text-xs md:text-base"
+                className="btn-cta px-6 py-3 md:px-12 md:py-5 font-black uppercase tracking-widest rounded-2xl shadow-xl shadow-accent/20 flex items-center gap-3 group text-xs md:text-base cursor-pointer"
               >
-                {step === 3 ? 'Complete Order' : 'Next Step'} <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
+                <span>{step === 3 ? 'Complete Order' : 'Next Step'}</span> <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
               </button>
             </div>
           </div>
@@ -236,16 +268,16 @@ export default function Checkout() {
               <h3 className="text-xl font-black uppercase italic tracking-tighter mb-8">Order <span className="text-accent">Summary</span></h3>
               
               <div className="space-y-6 mb-8">
-                {cartItems.map((item) => (
-                  <div key={item.id} className="flex items-center gap-4 group">
-                    <div className="w-20 h-20 bg-bg-primary border border-border-custom rounded-2xl overflow-hidden shrink-0">
-                      <img src={item.image} alt={item.name} className="w-full h-full object-contain p-2 group-hover:scale-110 transition-transform" />
+                {cart.map((item) => (
+                  <div key={`${item.id}-${item.name}`} className="flex items-center gap-4 group">
+                    <div className="w-20 h-20 bg-bg-primary border border-border-custom rounded-2xl overflow-hidden shrink-0 p-1">
+                      <img src={item.image} alt={item.name} className="w-full h-full object-cover rounded-xl group-hover:scale-105 transition-transform" referrerPolicy="no-referrer" />
                     </div>
                     <div className="flex-grow min-w-0">
                       <h4 className="text-xs font-black uppercase tracking-tight text-text-primary truncate">{item.name}</h4>
                       <div className="flex items-center justify-between mt-1">
-                        <span className="text-xs font-bold text-text-secondary">Qty: {item.qty}</span>
-                        <span className="text-xs font-black text-accent">₦{(item.price * item.qty).toLocaleString()}</span>
+                        <span className="text-xs font-bold text-text-secondary">Qty: {item.quantity}</span>
+                        <span className="text-xs font-black text-accent">₦{(item.price * item.quantity).toLocaleString()}</span>
                       </div>
                     </div>
                   </div>
@@ -255,7 +287,7 @@ export default function Checkout() {
               <div className="space-y-4 pt-8 border-t border-border-custom">
                 <div className="flex justify-between text-xs font-black uppercase tracking-widest text-text-secondary">
                   <span>Subtotal</span>
-                  <span className="text-text-primary">₦{subtotal.toLocaleString()}</span>
+                  <span className="text-text-primary">₦{cartSubtotal.toLocaleString()}</span>
                 </div>
                 <div className="flex justify-between text-xs font-black uppercase tracking-widest text-text-secondary">
                   <span>Shipping</span>

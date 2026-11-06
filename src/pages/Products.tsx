@@ -1,32 +1,19 @@
 import { motion, AnimatePresence } from 'motion/react';
-import { Wine, Droplets, Box, GlassWater, ShoppingCart, Star, Zap, ShieldCheck, Filter, LayoutGrid, Cookie } from 'lucide-react';
+import { Wine, Droplets, Box, GlassWater, ShoppingCart, Star, Zap, ShieldCheck, Filter, LayoutGrid, Cookie, Search, X, RotateCcw } from 'lucide-react';
 import { useState, useEffect } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, useNavigate } from 'react-router-dom';
+
+import { useInventory } from '../context/InventoryContext';
 
 import FridgeGrid from '../components/FridgeGrid';
-import { supabase } from '../lib/supabase';
 
 export default function Products() {
   const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
   const categoryParam = searchParams.get('category');
   const [activeFilter, setActiveFilter] = useState(categoryParam || 'All');
-  const [products, setProducts] = useState<any[]>([]);
-
-  useEffect(() => {
-    supabase.from('products').select('*').then(({ data, error }) => {
-      if (error) {
-        console.error("Error fetching products:", error);
-        return;
-      }
-      if (data) {
-        setProducts(data.map(r => ({
-          ...r,
-          flavorProfile: r.flavor_profile,
-          isPremium: Boolean(r.is_premium)
-        })));
-      }
-    });
-  }, []);
+  const [searchQuery, setSearchQuery] = useState('');
+  const { fridge, cartCount } = useInventory();
 
   useEffect(() => {
     if (categoryParam) {
@@ -35,17 +22,23 @@ export default function Products() {
   }, [categoryParam]);
   
   const categories = [
-    { name: 'All', icon: <LayoutGrid size={30} /> },
-    { name: 'Spirits', icon: <Wine size={30} /> },
-    { name: 'Sodas', icon: <Droplets size={30} /> },
-    { name: 'Juiceboxes', icon: <Box size={30} /> },
-    { name: 'Water', icon: <GlassWater size={30} /> },
-    { name: 'Snacks', icon: <Cookie size={30} /> }
+    { name: 'All', icon: <LayoutGrid size={15} /> },
+    { name: 'Spirits', icon: <Wine size={15} /> },
+    { name: 'Sodas', icon: <Droplets size={15} /> },
+    { name: 'Juiceboxes', icon: <Box size={15} /> },
+    { name: 'Water', icon: <GlassWater size={15} /> },
+    { name: 'Snacks', icon: <Cookie size={15} /> }
   ];
   
-  const filteredProducts = activeFilter === 'All' 
-    ? products 
-    : products.filter(p => p.category === activeFilter);
+  const filteredProducts = fridge.filter(p => {
+    const matchesCategory = activeFilter === 'All' || p.category === activeFilter;
+    const query = searchQuery.trim().toLowerCase();
+    const matchesSearch = !query || 
+      p.name.toLowerCase().includes(query) || 
+      p.category.toLowerCase().includes(query) ||
+      (p.flavorProfile && p.flavorProfile.some(f => f.toLowerCase().includes(query)));
+    return matchesCategory && matchesSearch;
+  });
 
   return (
     <div className="flex flex-col bg-bg-primary">
@@ -70,7 +63,7 @@ export default function Products() {
           initial={{ opacity: 0.9 }}
           animate={{ opacity: 0.6 }}
           transition={{ duration: 2, ease: "easeOut" }}
-          className="absolute inset-0 hidden dark:block bg-black/50 pointer-events-none" 
+          className="absolute inset-0 hidden dark:block bg-black/49 pointer-events-none" 
         />
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(245,158,11,0.1),transparent_70%)] pointer-events-none" />
         <div className="relative z-10 text-center px-6 max-w-7xl mx-auto w-full">
@@ -80,7 +73,7 @@ export default function Products() {
             transition={{ duration: 1, delay: 0.2 }}
           >
             <h1 className="text-[35px] sm:text-[41px] md:text-[83px] font-black uppercase italic tracking-tighter mb-4 text-text-primary drop-shadow-lg leading-none">The <span className="text-accent">Fridge</span></h1>
-            <p className="text-lg sm:text-xl font-light uppercase tracking-[0.3em] opacity-90 text-accent drop-shadow-md">{products.length} Premium Selections</p>
+            <p className="text-lg sm:text-xl font-light uppercase tracking-[0.3em] opacity-90 text-accent drop-shadow-md">{fridge.length} Premium Selections</p>
           </motion.div>
         </div>
       </header>
@@ -107,57 +100,102 @@ export default function Products() {
         {/* Option 4: Floating Cart Widget */}
         <div className="fixed bottom-8 right-8 z-50">
           <motion.button 
+            type="button"
+            onClick={() => navigate('/cart')}
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
-            className="flex items-center gap-3 px-6 py-4 bg-glass-filter backdrop-blur-[var(--glass-filter-blur)] border border-glass-filter-border rounded-full shadow-2xl text-text-primary"
+            className="flex items-center gap-3 px-6 py-4 bg-glass-filter backdrop-blur-[var(--glass-filter-blur)] border border-glass-filter-border rounded-full shadow-2xl text-text-primary cursor-pointer"
           >
             <div className="relative">
               <ShoppingCart size={24} />
-              <span className="absolute -top-2 -right-2 w-5 h-5 bg-accent text-white dark:text-black text-xs font-black flex items-center justify-center rounded-full shadow-lg">0</span>
+              <span className="absolute -top-2 -right-2 w-5 h-5 bg-accent text-white dark:text-black text-xs font-black flex items-center justify-center rounded-full shadow-lg">{cartCount}</span>
             </div>
             <span className="font-black uppercase tracking-widest text-sm">View Cart</span>
           </motion.button>
         </div>
 
-        {/* Sticky Filter Bar - Ice Frost Morphism */}
-        <div className="sticky top-20 z-40 py-4 mb-12 -mx-4 px-4 sm:-mx-8 sm:px-8 transition-all duration-300 bg-glass-filter backdrop-blur-[var(--glass-filter-blur)] border-b border-glass-filter-border shadow-lg shadow-black/5">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-6 w-full max-w-7xl mx-auto">
-            <div className="flex items-center gap-3 text-text-primary font-bold uppercase tracking-widest text-sm drop-shadow-sm">
-              <Filter size={18} className="text-accent" /> Filter By Category
-            </div>
+        {/* Responsive Sticky Filter Bar - Ice Frost Morphism (Optimized for Mobile, Tablet & Desktop) */}
+        <div className="sticky top-20 z-40 py-3 sm:py-4 mb-8 sm:mb-12 -mx-4 px-4 sm:-mx-8 sm:px-8 transition-all duration-300 bg-glass-filter backdrop-blur-[var(--glass-filter-blur)] border-b border-glass-filter-border shadow-lg shadow-black/5">
+          <div className="w-full max-w-7xl mx-auto flex flex-col lg:flex-row lg:items-center justify-between gap-3 sm:gap-4">
             
-            {/* Option 6: Icy Search Bar */}
-            <div className="flex-grow max-w-md mx-4 hidden md:block">
-              <input 
-                type="text" 
-                placeholder="Search the fridge..." 
-                className="w-full bg-glass-card backdrop-blur-[var(--glass-filter-blur)] border border-glass-card-border rounded-full px-6 py-2 text-sm text-text-primary placeholder:text-text-primary/50 focus:outline-none focus:border-accent/50 transition-all"
-              />
+            {/* Top / Left Sub-row: Title with Live Count + Responsive Search Input */}
+            <div className="flex items-center justify-between sm:justify-start gap-3 sm:gap-4 flex-1 min-w-0">
+              <div className="flex items-center gap-2 text-text-primary font-bold uppercase tracking-widest text-xs sm:text-sm shrink-0">
+                <Filter size={16} className="text-accent" />
+                <span className="hidden sm:inline">Categories</span>
+                <span className="sm:hidden">Fridge</span>
+                <span className="text-[10px] text-text-secondary font-mono bg-white/10 dark:bg-white/5 px-2 py-0.5 rounded-full border border-border-custom">
+                  {filteredProducts.length}
+                </span>
+              </div>
+
+              {/* Live Interactive Search Box (Functional on all device sizes!) */}
+              <div className="relative flex-1 max-w-xs sm:max-w-sm">
+                <Search size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-text-secondary pointer-events-none" />
+                <input 
+                  type="text" 
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Search the fridge..." 
+                  className="w-full bg-glass-card/70 backdrop-blur-md border border-glass-card-border rounded-full pl-9 pr-8 py-2 text-xs sm:text-sm text-text-primary placeholder:text-text-secondary/60 focus:outline-none focus:border-accent transition-all"
+                />
+                {searchQuery && (
+                  <button
+                    onClick={() => setSearchQuery('')}
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-text-secondary hover:text-text-primary p-1 cursor-pointer"
+                    aria-label="Clear search"
+                  >
+                    <X size={13} />
+                  </button>
+                )}
+              </div>
             </div>
 
-            <div className="flex flex-wrap justify-end gap-2 sm:gap-4">
-              {categories.map(category => (
-                <button
-                  key={category.name}
-                  onClick={() => setActiveFilter(category.name)}
-                  title={category.name}
-                  className={`p-2 sm:p-3 flex items-center justify-center transition-all rounded-xl ${
-                    activeFilter === category.name 
-                      ? 'text-accent scale-110 drop-shadow-md' 
-                      : 'text-text-primary/70 hover:text-accent'
-                  }`}
-                >
-                  <span className="flex">
-                    {category.icon}
-                  </span>
-                </button>
-              ))}
+            {/* Bottom / Right Sub-row: Category Selector with Smooth Touch Scroll on Tablet/Mobile */}
+            <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto no-scrollbar py-1 shrink-0 -mx-4 px-4 sm:mx-0 sm:px-0">
+              {categories.map(category => {
+                const isActive = activeFilter === category.name;
+                return (
+                  <button
+                    key={category.name}
+                    onClick={() => setActiveFilter(category.name)}
+                    className={`px-3 py-1.5 sm:px-3.5 sm:py-2 flex items-center gap-1.5 sm:gap-2 text-xs font-bold uppercase tracking-wider rounded-xl transition-all whitespace-nowrap cursor-pointer shrink-0 ${
+                      isActive 
+                        ? 'bg-accent text-white dark:text-black shadow-md shadow-accent/25 scale-[1.02]' 
+                        : 'bg-glass-card/50 hover:bg-glass-card text-text-secondary hover:text-text-primary border border-glass-card-border/60 hover:border-accent/40'
+                    }`}
+                  >
+                    <span className="shrink-0">{category.icon}</span>
+                    <span>{category.name}</span>
+                  </button>
+                );
+              })}
             </div>
+
           </div>
         </div>
 
         <div className="relative z-10">
-          <FridgeGrid products={filteredProducts} />
+          {filteredProducts.length === 0 ? (
+            <div className="py-20 text-center space-y-4 max-w-md mx-auto">
+              <div className="w-16 h-16 rounded-full bg-white/5 border border-border-custom flex items-center justify-center mx-auto text-accent">
+                <Filter size={24} />
+              </div>
+              <h3 className="text-xl font-black uppercase italic tracking-tight text-text-primary">No Drinks Found</h3>
+              <p className="text-sm text-text-secondary">
+                No items match your search for "{searchQuery}". Try a different keyword or reset filters.
+              </p>
+              <button
+                onClick={() => { setSearchQuery(''); setActiveFilter('All'); }}
+                className="btn-cta-secondary px-6 py-2.5 rounded-xl border border-white/20 text-xs font-bold uppercase tracking-wider inline-flex items-center gap-2 cursor-pointer"
+              >
+                <RotateCcw size={14} />
+                <span>Reset Filters</span>
+              </button>
+            </div>
+          ) : (
+            <FridgeGrid products={filteredProducts} />
+          )}
         </div>
       </div>
 

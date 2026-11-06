@@ -3,10 +3,12 @@ import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { Beer, Menu, X, Moon, Sun, ShoppingCart, Type, UserCircle } from 'lucide-react';
 import { UserProfileModal } from './UserProfileModal';
+import { useInventory } from '../context/InventoryContext';
 
 export default function Layout() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
+  const { cartCount } = useInventory();
   const [isAccessibleFonts, setIsAccessibleFonts] = useState(() => {
     if (typeof window !== 'undefined') {
       return localStorage.getItem('accessibleFonts') === 'true';
@@ -119,7 +121,7 @@ export default function Layout() {
               <div className="flex items-center gap-4 border-l border-border-custom pl-8 ml-4">
                 <Link to="/cart" className="p-2 hover:bg-bg-primary transition-colors text-text-secondary relative group">
                   <ShoppingCart size={20} className="group-hover:scale-110 transition-transform" />
-                  <span className="absolute -top-1 -right-1 w-5 h-5 bg-accent text-white dark:text-black text-xs font-black flex items-center justify-center rounded-full shadow-lg">0</span>
+                  <span className="absolute -top-1 -right-1 w-5 h-5 bg-accent text-white dark:text-black text-xs font-black flex items-center justify-center rounded-full shadow-lg">{cartCount}</span>
                 </Link>
                 <button onClick={handleProfileClick} className="p-2 hover:bg-bg-primary transition-colors text-text-secondary group" aria-label="User Profile">
                   <UserCircle size={20} className="group-hover:scale-110 transition-transform" />
@@ -131,7 +133,7 @@ export default function Layout() {
             <div className="flex items-center gap-2 sm:gap-4 lg:hidden">
               <Link to="/cart" className="p-2 text-text-secondary relative group">
                 <ShoppingCart size={20} />
-                <span className="absolute -top-1 -right-1 w-5 h-5 bg-accent text-white dark:text-black text-xs font-black flex items-center justify-center rounded-full shadow-lg">0</span>
+                <span className="absolute -top-1 -right-1 w-5 h-5 bg-accent text-white dark:text-black text-xs font-black flex items-center justify-center rounded-full shadow-lg">{cartCount}</span>
               </Link>
               <button onClick={handleProfileClick} className="p-2 hover:bg-bg-primary transition-colors text-text-secondary" aria-label="User Profile">
                 <UserCircle size={20} />
@@ -199,9 +201,9 @@ export default function Layout() {
                   <Link 
                     to="/login" 
                     onClick={() => setIsMenuOpen(false)}
-                    className="px-12 py-4 btn-cta text-white dark:text-black text-xs font-black uppercase tracking-widest rounded-full shadow-xl shadow-accent/20"
+                    className="btn-cta px-12 py-4 text-xs font-black uppercase tracking-widest rounded-full shadow-xl shadow-accent/20"
                   >
-                    Sign In
+                    <span>Sign In</span>
                   </Link>
                   <div className="w-12 h-1 bg-accent mb-4" />
                   <p className="text-xs font-bold uppercase tracking-[0.5em] text-text-secondary">Trust The Process</p>

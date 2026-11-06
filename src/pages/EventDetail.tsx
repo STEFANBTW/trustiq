@@ -137,8 +137,8 @@ export default function EventDetail() {
                 className="w-full bg-bg-primary border border-border-custom rounded-xl px-4 py-3 text-text-primary focus:outline-none focus:border-accent resize-none"
               />
             </div>
-            <button className="w-full py-5 btn-cta text-white dark:text-black font-black uppercase tracking-widest rounded-xl hover:scale-105 hover:brightness-110 active:scale-95 transition-all shadow-xl shadow-accent/20">
-              Submit Event Inquiry
+            <button className="btn-cta w-full py-5 font-black uppercase tracking-widest rounded-xl shadow-xl shadow-accent/20">
+              <span>Submit Event Inquiry</span>
             </button>
           </div>
         </div>
@@ -178,8 +178,8 @@ export default function EventDetail() {
               <p className="text-xs text-text-secondary leading-relaxed">
                 Our concierge is available 24/7 for guest count calculations.
               </p>
-              <button className="w-full py-2 bg-bg-primary border border-border-custom text-text-primary font-black uppercase tracking-widest text-xs rounded-lg hover:border-accent transition-colors">
-                Chat Now
+              <button className="btn-cta-secondary w-full py-2 border border-border-custom font-black uppercase tracking-widest text-xs rounded-lg">
+                <span>Chat Now</span>
               </button>
             </div>
           </div>

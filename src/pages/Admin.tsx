@@ -1,262 +1,252 @@
 import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
-import {
-  LayoutDashboard,
-  Package,
-  Calendar,
-  Plus,
-  Search,
-  Edit2,
-  Trash2,
+import { createPortal } from 'react-dom';
+import { 
+  LayoutDashboard, 
+  Package, 
+  Calendar, 
+  Plus, 
+  Search, 
+  Edit2, 
+  Trash2, 
   LogOut,
   Bell,
   Box,
   ShieldCheck,
   X,
-  Upload,
+  Check,
   Star
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useInventory, InventoryItem, MeetupItem } from '../context/InventoryContext';
 import { SettingsControls } from '../components/SettingsControls';
-import { supabase } from '../lib/supabase';
 
-type Tab = 'fridge' | 'wholesale' | 'meetups' | 'featured';
+type Tab = 'fridge' | 'wholesale' | 'meetups';
+
+const FRIDGE_CATEGORIES = ['Spirits', 'Sodas', 'Juiceboxes', 'Water', 'Snacks'];
+const DEFAULT_PRODUCT_IMAGE = 'https://images.unsplash.com/photo-1551024709-8f23befc6f87?auto=format&fit=crop&w=600&q=80';
+const DEFAULT_CRATE_IMAGE = 'https://images.unsplash.com/photo-1572116469696-31de0f17cc34?auto=format&fit=crop&w=600&q=80';
 
 export default function Admin() {
   const [activeTab, setActiveTab] = useState<Tab>('fridge');
   const [searchQuery, setSearchQuery] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+
+  // Modal State for Add / Edit
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [modalMode, setModalMode] = useState<'add' | 'edit'>('add');
+  const [editingId, setEditingId] = useState<number | null>(null);
+
+  // Product / Crate Form State
+  const [name, setName] = useState('');
+  const [category, setCategory] = useState('Spirits');
+  const [price, setPrice] = useState('20');
+  const [stock, setStock] = useState('15');
+  const [size, setSize] = useState('75cl');
+  const [image, setImage] = useState('');
+  const [flavorNotes, setFlavorNotes] = useState('Smoky, Oaky, Vanilla');
+  const [isFeatured, setIsFeatured] = useState(false);
+
+  // Meetup Form State
+  const [eventName, setEventName] = useState('');
+  const [eventDate, setEventDate] = useState('');
+  const [eventTime, setEventTime] = useState('6:00 PM - 9:00 PM');
+  const [eventLocation, setEventLocation] = useState('Main Lounge');
+  const [eventDescription, setEventDescription] = useState('');
+
   const navigate = useNavigate();
-
-  // Data States
-  const [products, setProducts] = useState<any[]>([]);
-  const [crates, setCrates] = useState<any[]>([]);
-  const [meetups, setMeetups] = useState<any[]>([]);
-
-  // Modal States
-  const [isProductModalOpen, setProductModalOpen] = useState(false);
-  const [isCrateModalOpen, setCrateModalOpen] = useState(false);
-  const [isMeetupModalOpen, setMeetupModalOpen] = useState(false);
-  const [editingItem, setEditingItem] = useState<any>(null);
-
-  // Form States
-  const [productForm, setProductForm] = useState({ name: '', price: 0, stock: 0, category: '', image: '', size: '', model_3d_url: '' });
-  const [crateForm, setCrateForm] = useState({ name: '', qty: '', price: '', image: '', description: '', options: '' });
-  const [meetupForm, setMeetupForm] = useState({ title: '', date: '', time: '', description: '', image: '' });
-  const [isUploading, setIsUploading] = useState(false);
-
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>, setForm: Function, formState: any) => {
-    // Note: Local upload backend is not persistent on Vercel. 
-    // Recommended: Use Image URLs directly or setup Supabase Storage.
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    setIsUploading(true);
-    const formData = new FormData();
-    formData.append('image', file);
-
-    try {
-      const res = await fetch('/api/upload', {
-        method: 'POST',
-        body: formData
-      });
-      if (!res.ok) throw new Error("Upload failed");
-      const data = await res.json();
-      if (data.url) {
-        setForm({ ...formState, image: data.url });
-      }
-    } catch (error) {
-      console.error('Upload failed', error);
-      alert("Local upload failed. Please use an Image URL instead for now.");
-    } finally {
-      setIsUploading(false);
-    }
-  };
+  const { fridge, wholesale, meetups, setFridge, setWholesale, setMeetups } = useInventory();
 
   useEffect(() => {
-    fetchData();
-  }, []);
-
-  const fetchData = async () => {
-    try {
-      const [{ data: pData }, { data: cData }, { data: mData }] = await Promise.all([
-        supabase.from('products').select('*'),
-        supabase.from('wholesale').select('*'),
-        supabase.from('meetups').select('*')
-      ]);
-
-      if (pData) {
-        setProducts(pData.map(r => ({
-          ...r,
-          flavorProfile: r.flavor_profile,
-          isPremium: Boolean(r.is_premium)
-        })));
-      }
-      if (cData) setCrates(cData);
-      if (mData) setMeetups(mData);
-    } catch (error) {
-      console.error('Error fetching data:', error);
-    }
-  };
+    setCurrentPage(1);
+  }, [activeTab, searchQuery]);
 
   const handleLogout = () => {
     navigate('/login');
   };
 
-  // --- Product Handlers ---
-  const openProductModal = (product?: any) => {
-    if (product) {
-      setEditingItem(product);
-      setProductForm({ ...product, model_3d_url: product.model_3d_url || '' });
-    } else {
-      setEditingItem(null);
-      setProductForm({ name: '', price: 0, stock: 0, category: '', image: '', size: '', model_3d_url: '' });
-    }
-    setProductModalOpen(true);
+  const handleDelete = (tab: Tab, id: number) => {
+    if (tab === 'fridge') setFridge((prev) => prev.filter((item) => item.id !== id));
+    if (tab === 'wholesale') setWholesale((prev) => prev.filter((item) => item.id !== id));
+    if (tab === 'meetups') setMeetups((prev) => prev.filter((item) => item.id !== id));
   };
 
-  const saveProduct = async () => {
-    const payload = {
-      name: productForm.name,
-      price: productForm.price,
-      stock: productForm.stock,
-      category: productForm.category,
-      image: productForm.image,
-      size: productForm.size,
-      model_3d_url: productForm.model_3d_url || null,
-      flavor_profile: (productForm as any).flavorProfile || [],
-      is_premium: (productForm as any).isPremium || false
-    };
-
-    let result;
-    if (editingItem) {
-      result = await supabase.from('products').update(payload).eq('id', editingItem.id);
-    } else {
-      result = await supabase.from('products').insert([payload]);
-    }
-
-    if (result.error) {
-      console.error("Error saving product:", result.error);
-      alert("Error saving product: " + result.error.message);
-    } else {
-      setProductModalOpen(false);
-      fetchData();
-    }
+  const toggleFeatured = (id: number) => {
+    setFridge((prev) =>
+      prev.map((item) => (item.id === id ? { ...item, isFeatured: !item.isFeatured } : item))
+    );
   };
 
-  const deleteProduct = async (id: number) => {
-    if (confirm('Are you sure you want to delete this product?')) {
-      const { error } = await supabase.from('products').delete().eq('id', id);
-      if (error) {
-        alert("Error deleting product: " + error.message);
+  const openAddModal = () => {
+    setModalMode('add');
+    setEditingId(null);
+    if (activeTab === 'fridge') {
+      setName('');
+      setCategory('Spirits');
+      setPrice('20');
+      setStock('24');
+      setSize('75cl');
+      setImage('');
+      setFlavorNotes('Smooth, Crisp, Balanced');
+      setIsFeatured(fridge.filter((i) => i.isFeatured).length < 4);
+    } else if (activeTab === 'wholesale') {
+      setName('');
+      setCategory('Wholesale');
+      setPrice('500');
+      setStock('12');
+      setSize('24 Bottles');
+      setImage('');
+    } else {
+      setEventName('');
+      setEventDate('Every Friday');
+      setEventTime('7:00 PM - 10:00 PM');
+      setEventLocation('Main Lounge');
+      setEventDescription('');
+    }
+    setIsModalOpen(true);
+  };
+
+  const openEditProductModal = (item: InventoryItem) => {
+    setModalMode('edit');
+    setEditingId(item.id);
+    setName(item.name);
+    setCategory(item.category || 'Spirits');
+    setPrice(String(item.price));
+    setStock(String(item.stock));
+    setSize(item.size || '75cl');
+    setImage(item.image || '');
+    setFlavorNotes(item.flavorProfile ? item.flavorProfile.join(', ') : 'Smooth, Crisp, Balanced');
+    setIsFeatured(!!item.isFeatured);
+    setIsModalOpen(true);
+  };
+
+  const openEditMeetupModal = (event: MeetupItem) => {
+    setModalMode('edit');
+    setEditingId(event.id);
+    setEventName(event.name || event.title || '');
+    setEventDate(event.date || '');
+    setEventTime(event.time || '7:00 PM - 10:00 PM');
+    setEventLocation(event.location || 'Main Lounge');
+    setEventDescription(event.description || '');
+    setIsModalOpen(true);
+  };
+
+  const handleFormSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (activeTab === 'fridge') {
+      if (!name.trim()) return;
+      const parsedFlavors = flavorNotes
+        .split(',')
+        .map((s) => s.trim())
+        .filter(Boolean);
+
+      const newProduct: InventoryItem = {
+        id: modalMode === 'edit' && editingId !== null
+          ? editingId
+          : Math.max(0, ...fridge.map((i) => i.id)) + 1,
+        name: name.trim(),
+        category,
+        price: Math.max(0, Number(price) || 0),
+        stock: Math.max(0, Number(stock) || 0),
+        size: size.trim() || '75cl',
+        image: image.trim() || DEFAULT_PRODUCT_IMAGE,
+        flavorProfile: parsedFlavors.length > 0 ? parsedFlavors : ['Smooth', 'Balanced'],
+        isFeatured,
+      };
+
+      if (modalMode === 'edit' && editingId !== null) {
+        setFridge((prev) => prev.map((item) => (item.id === editingId ? newProduct : item)));
       } else {
-        fetchData();
+        setFridge((prev) => [newProduct, ...prev]);
+        setCurrentPage(1);
+      }
+    } else if (activeTab === 'wholesale') {
+      if (!name.trim()) return;
+      const newCrate: InventoryItem = {
+        id: modalMode === 'edit' && editingId !== null
+          ? editingId
+          : Math.max(100, ...wholesale.map((i) => i.id)) + 1,
+        name: name.trim(),
+        category: 'Wholesale',
+        price: Math.max(0, Number(price) || 0),
+        stock: Math.max(0, Number(stock) || 0),
+        size: size.trim() || '12 Bottles',
+        qty: size.trim() || '12 Bottles',
+        image: image.trim() || DEFAULT_CRATE_IMAGE,
+      };
+
+      if (modalMode === 'edit' && editingId !== null) {
+        setWholesale((prev) => prev.map((item) => (item.id === editingId ? newCrate : item)));
+      } else {
+        setWholesale((prev) => [newCrate, ...prev]);
+      }
+    } else if (activeTab === 'meetups') {
+      if (!eventName.trim()) return;
+      const newMeetup: MeetupItem = {
+        id: modalMode === 'edit' && editingId !== null
+          ? editingId
+          : Math.max(200, ...meetups.map((i) => i.id)) + 1,
+        name: eventName.trim(),
+        title: eventName.trim(),
+        date: eventDate.trim() || 'Upcoming',
+        time: eventTime.trim() || '7:00 PM - 10:00 PM',
+        location: eventLocation.trim() || 'Main Hall',
+        description: eventDescription.trim() || 'Join fellow enthusiasts for a curated evening session.',
+      };
+
+      if (modalMode === 'edit' && editingId !== null) {
+        setMeetups((prev) => prev.map((item) => (item.id === editingId ? newMeetup : item)));
+      } else {
+        setMeetups((prev) => [newMeetup, ...prev]);
       }
     }
+
+    setIsModalOpen(false);
   };
 
-  // --- Crate Handlers ---
-  const openCrateModal = (crate?: any) => {
-    if (crate) {
-      setEditingItem(crate);
-      setCrateForm({ ...crate, options: (crate.options || []).join(', ') });
-    } else {
-      setEditingItem(null);
-      setCrateForm({ name: '', qty: '', price: '', image: '', description: '', options: '' });
-    }
-    setCrateModalOpen(true);
-  };
+  // Filtered Lists based on Search Query
+  const q = searchQuery.trim().toLowerCase();
+  const filteredFridge = fridge.filter(
+    (p) => !q || p.name.toLowerCase().includes(q) || p.category.toLowerCase().includes(q)
+  );
+  const filteredWholesale = wholesale.filter(
+    (c) => !q || c.name.toLowerCase().includes(q) || c.size.toLowerCase().includes(q)
+  );
+  const filteredMeetups = meetups.filter(
+    (m) =>
+      !q ||
+      (m.name && m.name.toLowerCase().includes(q)) ||
+      (m.title && m.title.toLowerCase().includes(q)) ||
+      (m.location && m.location.toLowerCase().includes(q))
+  );
 
-  const saveCrate = async () => {
-    const payload = {
-      name: crateForm.name,
-      qty: crateForm.qty,
-      price: crateForm.price,
-      image: crateForm.image,
-      description: crateForm.description,
-      options: crateForm.options.split(',').map(s => s.trim()).filter(s => s !== "")
-    };
+  // Pagination for Fridge
+  const totalPages = Math.max(1, Math.ceil(filteredFridge.length / itemsPerPage));
+  const paginatedFridge = filteredFridge.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
 
-    let result;
-    if (editingItem) {
-      result = await supabase.from('wholesale').update(payload).eq('id', editingItem.id);
-    } else {
-      result = await supabase.from('wholesale').insert([payload]);
-    }
-
-    if (result.error) {
-      console.error("Error saving crate:", result.error);
-      alert("Error saving crate: " + result.error.message);
-    } else {
-      setCrateModalOpen(false);
-      fetchData();
-    }
-  };
-
-  const deleteCrate = async (id: number) => {
-    if (confirm('Are you sure you want to delete this crate?')) {
-      const { error } = await supabase.from('wholesale').delete().eq('id', id);
-      if (error) {
-        alert("Error deleting crate: " + error.message);
-      } else {
-        fetchData();
-      }
-    }
-  };
-
-  // --- Meetup Handlers ---
-  const openMeetupModal = (meetup?: any) => {
-    if (meetup) {
-      setEditingItem(meetup);
-      setMeetupForm(meetup);
-    } else {
-      setEditingItem(null);
-      setMeetupForm({ title: '', date: '', time: '', description: '', image: '' });
-    }
-    setMeetupModalOpen(true);
-  };
-
-  const saveMeetup = async () => {
-    const payload = {
-      title: meetupForm.title,
-      date: meetupForm.date,
-      time: meetupForm.time,
-      description: meetupForm.description,
-      image: meetupForm.image || null
-    };
-
-    let result;
-    if (editingItem) {
-      result = await supabase.from('meetups').update(payload).eq('id', editingItem.id);
-    } else {
-      result = await supabase.from('meetups').insert([payload]);
-    }
-
-    if (result.error) {
-      console.error("Error saving meetup:", result.error);
-      alert("Error saving meetup: " + result.error.message);
-    } else {
-      setMeetupModalOpen(false);
-      fetchData();
-    }
-  };
-
-  const deleteMeetup = async (id: number) => {
-    if (confirm('Are you sure you want to delete this event?')) {
-      const { error } = await supabase.from('meetups').delete().eq('id', id);
-      if (error) {
-        alert("Error deleting meetup: " + error.message);
-      } else {
-        fetchData();
-      }
-    }
-  };
+  const featuredCount = fridge.filter((p) => p.isFeatured).length;
 
   const renderFridge = () => (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-black uppercase italic tracking-tighter">The <span className="text-accent">Fridge</span> Inventory</h2>
-        <button onClick={() => openProductModal()} className="flex items-center gap-2 px-6 py-3 btn-cta text-white dark:text-black font-black uppercase tracking-widest text-xs rounded-xl hover:scale-105 hover:brightness-110 active:scale-95 transition-all shadow-lg shadow-accent/20">
-          <Plus size={16} /> Add Product
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <div>
+          <h2 className="text-2xl font-black uppercase italic tracking-tighter">
+            The <span className="text-accent">Fridge</span> Inventory
+          </h2>
+          <p className="text-xs text-text-secondary mt-1">
+            Starred items ({featuredCount} active) appear in the Home Page <span className="text-accent font-bold">Featured Selections</span>.
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={openAddModal}
+          className="btn-cta flex items-center gap-2 px-5 sm:px-6 py-3 font-black uppercase tracking-widest text-xs rounded-xl shadow-lg shadow-accent/20 cursor-pointer shrink-0"
+        >
+          <Plus size={16} /> <span>Add Product</span>
         </button>
       </div>
 
@@ -266,50 +256,80 @@ export default function Admin() {
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="border-b border-border-custom bg-bg-primary/50">
-                <th className="p-6 text-xs font-black uppercase tracking-widest text-text-secondary">Product</th>
-                <th className="p-6 text-xs font-black uppercase tracking-widest text-text-secondary">Category</th>
-                <th className="p-6 text-xs font-black uppercase tracking-widest text-text-secondary">Price</th>
-                <th className="p-6 text-xs font-black uppercase tracking-widest text-text-secondary">Stock</th>
-                <th className="p-6 text-xs font-black uppercase tracking-widest text-text-secondary text-right">Actions</th>
+                <th className="p-4 text-[10px] font-bold uppercase tracking-widest text-text-secondary">Product</th>
+                <th className="p-4 text-[10px] font-bold uppercase tracking-widest text-text-secondary">Category</th>
+                <th className="p-4 text-[10px] font-bold uppercase tracking-widest text-text-secondary">Featured</th>
+                <th className="p-4 text-[10px] font-bold uppercase tracking-widest text-text-secondary">Price</th>
+                <th className="p-4 text-[10px] font-bold uppercase tracking-widest text-text-secondary">Stock</th>
+                <th className="p-4 text-[10px] font-bold uppercase tracking-widest text-text-secondary text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border-custom">
-              {products.map((product) => (
+              {paginatedFridge.map((product) => (
                 <tr key={product.id} className="group hover:bg-bg-primary/30 transition-colors">
-                  <td className="p-6">
-                    <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 rounded-xl bg-bg-primary border border-border-custom overflow-hidden flex items-center justify-center p-2">
-                        <img src={product.image} alt={product.name} className="w-full h-full object-contain" referrerPolicy="no-referrer" />
+                  <td className="p-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-11 h-11 rounded-lg bg-bg-primary border border-border-custom overflow-hidden flex items-center justify-center p-0.5 shrink-0">
+                        <img
+                          src={product.image}
+                          alt={product.name}
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).src = DEFAULT_PRODUCT_IMAGE;
+                          }}
+                          className="w-full h-full object-cover rounded-md"
+                          referrerPolicy="no-referrer"
+                        />
                       </div>
                       <div>
-                        <div className="text-sm font-black text-text-primary">{product.name}</div>
-                        <div className="text-[10px] text-text-secondary uppercase tracking-widest">{product.size}</div>
+                        <div className="text-xs font-bold text-text-primary">{product.name}</div>
+                        <div className="text-[9px] text-text-secondary uppercase tracking-widest">{product.size}</div>
                       </div>
                     </div>
                   </td>
-                  <td className="p-6">
-                    <span className="text-accent text-[10px] font-black uppercase tracking-widest">
+                  <td className="p-4">
+                    <span className="px-2 py-0.5 bg-accent/10 border border-accent/20 text-accent text-[9px] font-bold uppercase tracking-widest rounded-full">
                       {product.category}
                     </span>
                   </td>
-                  <td className="p-6 text-sm font-black text-text-primary">₦{product.price.toLocaleString()}</td>
-                  <td className="p-6">
-                    <span className="text-sm font-black text-text-primary">{product.stock}</span>
+                  <td className="p-4">
+                    <button
+                      type="button"
+                      onClick={() => toggleFeatured(product.id)}
+                      title={product.isFeatured ? 'Remove from Home Featured Selections' : 'Add to Home Featured Selections'}
+                      className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border transition-colors cursor-pointer ${
+                        product.isFeatured
+                          ? 'bg-accent/15 border-accent text-accent'
+                          : 'bg-bg-primary border-border-custom text-text-secondary hover:border-accent/40 hover:text-text-primary'
+                      }`}
+                    >
+                      <Star size={12} fill={product.isFeatured ? 'currentColor' : 'none'} />
+                      <span>{product.isFeatured ? 'Featured' : 'Standard'}</span>
+                    </button>
                   </td>
-                  <td className="p-6 text-right">
-                    <div className="flex items-center justify-end gap-2">
+                  <td className="p-4 text-xs font-bold text-text-primary">₦{product.price.toLocaleString()}</td>
+                  <td className="p-4">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-bold text-text-primary">{product.stock}</span>
+                    </div>
+                  </td>
+                  <td className="p-4 text-right">
+                    <div className="flex items-center justify-end gap-1">
                       <button
-                        onClick={() => toggleFeatured(product)}
-                        className={`p-2 rounded-xl border transition-all duration-300 ${product.is_featured
-                          ? 'bg-accent/10 border-accent text-accent shadow-[0_0_15px_rgba(245,158,11,0.2)]'
-                          : 'bg-transparent border-transparent text-text-secondary hover:text-accent hover:border-accent/30'
-                          }`}
-                        title={product.is_featured ? "Remove from Featured" : "Add to Featured"}
+                        type="button"
+                        onClick={() => openEditProductModal(product)}
+                        title="Edit Product"
+                        className="p-1.5 hover:text-accent transition-colors cursor-pointer"
                       >
-                        <Star size={16} fill={product.is_featured ? "currentColor" : "none"} />
+                        <Edit2 size={14} />
                       </button>
-                      <button onClick={() => openProductModal(product)} className="p-2 hover:text-accent transition-colors"><Edit2 size={16} /></button>
-                      <button onClick={() => deleteProduct(product.id)} className="p-2 hover:text-rose-500 transition-colors"><Trash2 size={16} /></button>
+                      <button
+                        type="button"
+                        onClick={() => handleDelete('fridge', product.id)}
+                        title="Delete Product"
+                        className="p-1.5 hover:text-rose-500 transition-colors cursor-pointer"
+                      >
+                        <Trash2 size={14} />
+                      </button>
                     </div>
                   </td>
                 </tr>
@@ -317,145 +337,174 @@ export default function Admin() {
             </tbody>
           </table>
         </div>
+        <div className="p-6 border-t border-border-custom bg-bg-primary/20 flex items-center justify-between">
+          <span className="text-xs font-bold text-text-secondary">
+            Showing {paginatedFridge.length} of {filteredFridge.length} products (Page {currentPage} of {totalPages})
+          </span>
+          <div className="flex gap-2">
+            <button
+              type="button"
+              disabled={currentPage <= 1}
+              onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+              className="px-4 py-2 border border-border-custom rounded-lg text-xs font-black uppercase tracking-widest hover:bg-bg-primary disabled:opacity-40 transition-all cursor-pointer"
+            >
+              Prev
+            </button>
+            <button
+              type="button"
+              disabled={currentPage >= totalPages}
+              onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+              className="px-4 py-2 border border-border-custom rounded-lg text-xs font-black uppercase tracking-widest hover:bg-bg-primary disabled:opacity-40 transition-all cursor-pointer"
+            >
+              Next
+            </button>
+          </div>
+        </div>
       </div>
 
       {/* Mobile Cards */}
-      <div className="md:hidden grid grid-cols-2 gap-3 sm:gap-4">
-        {products.map((product) => (
-          <div key={product.id} className="bg-bg-secondary border border-border-custom rounded-2xl p-3 flex flex-col gap-3 shadow-lg">
-            <div className="flex flex-col gap-3">
-              <div className="w-full h-32 rounded-xl bg-bg-primary border border-border-custom overflow-hidden flex items-center justify-center p-2 shrink-0">
-                <img src={product.image} alt={product.name} className="w-full h-full object-contain" referrerPolicy="no-referrer" />
+      <div className="md:hidden space-y-4">
+        {paginatedFridge.map((product) => (
+          <div key={product.id} className="bg-bg-secondary border border-border-custom rounded-2xl p-4 flex flex-col gap-4 shadow-lg">
+            <div className="flex items-center gap-4">
+              <div className="w-16 h-16 rounded-xl bg-bg-primary border border-border-custom overflow-hidden flex items-center justify-center p-1 shrink-0">
+                <img
+                  src={product.image}
+                  alt={product.name}
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).src = DEFAULT_PRODUCT_IMAGE;
+                  }}
+                  className="w-full h-full object-cover rounded-lg"
+                  referrerPolicy="no-referrer"
+                />
               </div>
               <div className="flex-grow">
-                <div className="text-[10px] font-black text-text-primary line-clamp-1">{product.name}</div>
-                <div className="text-[8px] text-text-secondary uppercase tracking-widest mb-1">{product.size}</div>
-                <div className="flex justify-between items-center">
-                  <span className="text-accent text-[8px] font-black uppercase tracking-widest">
-                    {product.category}
-                  </span>
-                  <div className="text-[10px] font-black text-text-primary">₦{product.price.toLocaleString()}</div>
+                <div className="text-sm font-black text-text-primary">{product.name}</div>
+                <div className="text-[10px] text-text-secondary uppercase tracking-widest mb-1">{product.size}</div>
+                <span className="px-2 py-0.5 bg-accent/10 border border-accent/20 text-accent text-[8px] font-black uppercase tracking-widest rounded-full">
+                  {product.category}
+                </span>
+              </div>
+              <div className="text-right">
+                <div className="text-sm font-black text-text-primary">₦{product.price.toLocaleString()}</div>
+                <div className="flex items-center justify-end gap-1 mt-1">
+                  <div className={`w-1.5 h-1.5 rounded-full ${product.stock > 10 ? 'bg-emerald-500' : 'bg-rose-500'}`} />
+                  <span className="text-xs font-black text-text-primary">{product.stock}</span>
                 </div>
               </div>
             </div>
-            <div className="flex items-center justify-end gap-1 pt-2 border-t border-border-custom">
+            <div className="flex items-center justify-between pt-3 border-t border-border-custom">
               <button
-                onClick={() => toggleFeatured(product)}
-                className={`p-1.5 rounded-lg transition-colors ${product.is_featured ? 'bg-accent/10 text-accent' : 'bg-bg-primary text-text-secondary hover:text-accent'}`}
+                type="button"
+                onClick={() => toggleFeatured(product.id)}
+                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider border transition-colors cursor-pointer ${
+                  product.isFeatured
+                    ? 'bg-accent/15 border-accent text-accent'
+                    : 'bg-bg-primary border-border-custom text-text-secondary'
+                }`}
               >
-                <Star size={12} fill={product.is_featured ? "currentColor" : "none"} />
+                <Star size={12} fill={product.isFeatured ? 'currentColor' : 'none'} />
+                <span>{product.isFeatured ? 'Featured on Home' : 'Set Featured'}</span>
               </button>
-              <button onClick={() => openProductModal(product)} className="p-1.5 bg-bg-primary rounded-lg text-text-secondary hover:text-accent transition-colors"><Edit2 size={12} /></button>
-              <button onClick={() => deleteProduct(product.id)} className="p-1.5 bg-bg-primary rounded-lg text-text-secondary hover:text-rose-500 transition-colors"><Trash2 size={12} /></button>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => openEditProductModal(product)}
+                  className="p-2 bg-bg-primary rounded-lg text-text-secondary hover:text-accent transition-colors cursor-pointer"
+                >
+                  <Edit2 size={16} />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleDelete('fridge', product.id)}
+                  className="p-2 bg-bg-primary rounded-lg text-text-secondary hover:text-rose-500 transition-colors cursor-pointer"
+                >
+                  <Trash2 size={16} />
+                </button>
+              </div>
             </div>
           </div>
         ))}
-      </div>
-    </div>
-  );
-
-  const toggleFeatured = async (product: any) => {
-    const isNowFeatured = !product.is_featured;
-
-    if (isNowFeatured) {
-      const featuredCount = products.filter(p => p.is_featured).length;
-      if (featuredCount >= 4) {
-        alert("Maximum of 4 featured products allowed. Please remove one before adding another.");
-        return;
-      }
-    }
-
-    const { error } = await supabase
-      .from('products')
-      .update({ is_featured: isNowFeatured })
-      .eq('id', product.id);
-
-    if (error) {
-      alert("Error updating featured status: " + error.message);
-    } else {
-      fetchData();
-    }
-  };
-
-  const renderFeatured = () => (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div className="space-y-1">
-          <h2 className="text-2xl font-black uppercase italic tracking-tighter"><span className="text-accent">Featured</span> Selection</h2>
-          <p className="text-xs text-text-secondary uppercase tracking-widest font-bold">Maximum 4 products selected</p>
+        <div className="flex justify-between items-center pt-2">
+          <button
+            type="button"
+            disabled={currentPage <= 1}
+            onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+            className="px-4 py-2 border border-border-custom rounded-lg text-xs font-black uppercase tracking-widest hover:bg-bg-primary disabled:opacity-40 transition-all cursor-pointer"
+          >
+            Prev
+          </button>
+          <span className="text-[10px] font-bold text-text-secondary">
+            Page {currentPage} / {totalPages} ({filteredFridge.length} items)
+          </span>
+          <button
+            type="button"
+            disabled={currentPage >= totalPages}
+            onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+            className="px-4 py-2 border border-border-custom rounded-lg text-xs font-black uppercase tracking-widest hover:bg-bg-primary disabled:opacity-40 transition-all cursor-pointer"
+          >
+            Next
+          </button>
         </div>
-        <div className="flex items-center gap-2 px-4 py-2 bg-bg-secondary border border-border-custom rounded-xl text-xs font-black uppercase tracking-widest">
-          <Star size={14} className="text-accent" fill="currentColor" /> {products.filter(p => p.is_featured).length} / 4
-        </div>
-      </div>
-
-      <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {products.filter(p => p.is_featured).map((product) => (
-          <div key={product.id} className="bg-bg-secondary border border-accent/50 rounded-3xl p-6 shadow-xl relative overflow-hidden group">
-            <div className="absolute top-4 right-4">
-              <button
-                onClick={() => toggleFeatured(product)}
-                className="p-2 bg-bg-primary border border-border-custom rounded-xl text-rose-500 hover:bg-rose-500 hover:text-white transition-all shadow-lg"
-              >
-                <X size={16} />
-              </button>
-            </div>
-            <div className="h-40 bg-bg-primary rounded-2xl flex items-center justify-center p-6 mb-6">
-              <img src={product.image} alt={product.name} className="h-full object-contain group-hover:scale-110 transition-transform" />
-            </div>
-            <div className="space-y-2">
-              <div className="text-[10px] text-accent font-black uppercase tracking-[0.2em]">{product.category}</div>
-              <h3 className="text-lg font-black uppercase italic tracking-tighter line-clamp-1">{product.name}</h3>
-              <div className="text-xl font-black">₦{product.price.toLocaleString()}</div>
-            </div>
-          </div>
-        ))}
-        {products.filter(p => p.is_featured).length === 0 && (
-          <div className="col-span-full py-24 text-center border-2 border-dashed border-border-custom rounded-3xl">
-            <Star size={48} className="mx-auto text-text-secondary opacity-20 mb-4" />
-            <p className="text-text-secondary font-black uppercase tracking-widest text-sm">No products featured yet</p>
-            <button onClick={() => setActiveTab('fridge')} className="mt-4 text-accent text-xs font-black uppercase tracking-widest hover:underline">Go to inventory to add featured products</button>
-          </div>
-        )}
       </div>
     </div>
   );
 
   const renderWholesale = () => (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-black uppercase italic tracking-tighter">Wholesale <span className="text-accent">Crates</span></h2>
-        <button onClick={() => openCrateModal()} className="flex items-center gap-2 px-6 py-3 btn-cta text-white dark:text-black font-black uppercase tracking-widest text-xs rounded-xl hover:scale-105 hover:brightness-110 active:scale-95 transition-all shadow-lg shadow-accent/20">
-          <Plus size={16} /> Add Crate
+      <div className="flex items-center justify-between gap-4">
+        <h2 className="text-2xl font-black uppercase italic tracking-tighter">
+          Wholesale <span className="text-accent">Crates</span>
+        </h2>
+        <button
+          type="button"
+          onClick={openAddModal}
+          className="btn-cta flex items-center gap-2 px-5 sm:px-6 py-3 font-black uppercase tracking-widest text-xs rounded-xl shadow-lg shadow-accent/20 cursor-pointer shrink-0"
+        >
+          <Plus size={16} /> <span>Add Crate</span>
         </button>
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-2 gap-3 sm:gap-6">
-        {crates.map((crate) => (
-          <div key={crate.id} className="bg-bg-secondary border border-border-custom rounded-2xl sm:rounded-3xl p-3 sm:p-6 shadow-xl flex flex-col sm:flex-row gap-3 sm:gap-6 group hover:border-accent/50 transition-all">
-            <div className="w-full sm:w-32 h-24 sm:h-32 rounded-xl sm:rounded-2xl bg-bg-primary border border-border-custom overflow-hidden shrink-0">
-              <img src={crate.image} alt={crate.name} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+        {filteredWholesale.map((crate) => (
+          <div key={crate.id} className="bg-bg-secondary border border-border-custom rounded-xl p-3 shadow-md flex gap-3 group hover:border-accent/50 transition-all">
+            <div className="w-20 h-20 rounded-lg bg-bg-primary border border-border-custom overflow-hidden shrink-0">
+              <img
+                src={crate.image}
+                alt={crate.name}
+                onError={(e) => {
+                  (e.target as HTMLImageElement).src = DEFAULT_CRATE_IMAGE;
+                }}
+                className="w-full h-full object-cover"
+                referrerPolicy="no-referrer"
+              />
             </div>
-            <div className="flex-grow space-y-2 sm:space-y-4">
+            <div className="flex-grow space-y-1">
               <div className="flex justify-between items-start">
                 <div>
-                  <h3 className="text-[10px] sm:text-lg font-black uppercase tracking-tight text-text-primary line-clamp-2">{crate.name}</h3>
-                  <p className="text-[8px] sm:text-xs text-text-secondary font-bold uppercase tracking-widest">{crate.qty}</p>
+                  <h3 className="text-xs font-bold uppercase tracking-tight text-text-primary line-clamp-1">{crate.name}</h3>
+                  <p className="text-[9px] text-text-secondary font-bold uppercase tracking-widest">{crate.size}</p>
                 </div>
-                <div className="flex gap-1 sm:gap-2 shrink-0">
-                  <button onClick={() => openCrateModal(crate)} className="p-1 sm:p-2 hover:text-accent transition-colors"><Edit2 className="w-3 h-3 sm:w-[14px] sm:h-[14px]" /></button>
-                  <button onClick={() => deleteCrate(crate.id)} className="p-1 sm:p-2 hover:text-rose-500 transition-colors"><Trash2 className="w-3 h-3 sm:w-[14px] sm:h-[14px]" /></button>
+                <div className="flex gap-1 shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => openEditProductModal(crate)}
+                    className="p-1 hover:text-accent transition-colors cursor-pointer"
+                  >
+                    <Edit2 size={12} />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleDelete('wholesale', crate.id)}
+                    className="p-1 hover:text-rose-500 transition-colors cursor-pointer"
+                  >
+                    <Trash2 size={12} />
+                  </button>
                 </div>
               </div>
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between pt-2 sm:pt-4 border-t border-border-custom gap-2 sm:gap-0">
-                <div className="text-sm sm:text-xl font-black text-accent">{crate.price}</div>
-                <div className="flex flex-wrap gap-1">
-                  {crate.options?.slice(0, 2).map((opt: string) => (
-                    <span key={opt} className="text-[6px] sm:text-[8px] font-black uppercase tracking-widest px-1.5 py-0.5 sm:px-2 sm:py-0.5 bg-bg-primary border border-border-custom rounded-full">
-                      {opt}
-                    </span>
-                  ))}
-                </div>
+              <div className="flex items-center justify-between pt-2 border-t border-border-custom">
+                <div className="text-sm font-bold text-accent">₦{crate.price.toLocaleString()}</div>
+                <div className="text-[10px] text-text-secondary font-bold uppercase tracking-wider">{crate.stock} Crates</div>
               </div>
             </div>
           </div>
@@ -466,45 +515,59 @@ export default function Admin() {
 
   const renderMeetups = () => (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-black uppercase italic tracking-tighter">Meetup <span className="text-accent">Events</span></h2>
-        <button onClick={() => openMeetupModal()} className="flex items-center gap-2 px-6 py-3 btn-cta text-white dark:text-black font-black uppercase tracking-widest text-xs rounded-xl hover:scale-105 hover:brightness-110 active:scale-95 transition-all shadow-lg shadow-accent/20">
-          <Plus size={16} /> Create Event
+      <div className="flex items-center justify-between gap-4">
+        <h2 className="text-2xl font-black uppercase italic tracking-tighter">
+          Meetup <span className="text-accent">Events</span>
+        </h2>
+        <button
+          type="button"
+          onClick={openAddModal}
+          className="btn-cta flex items-center gap-2 px-5 sm:px-6 py-3 font-black uppercase tracking-widest text-xs rounded-xl shadow-lg shadow-accent/20 cursor-pointer shrink-0"
+        >
+          <Plus size={16} /> <span>Create Event</span>
         </button>
       </div>
 
-      <div className="bg-bg-secondary border border-border-custom rounded-3xl overflow-hidden shadow-xl">
-        <div className="p-8 space-y-8">
-          {meetups.map((event, idx) => (
-            <div key={event.id} className={`flex flex-col md:flex-row gap-8 pb-8 ${idx !== meetups.length - 1 ? 'border-b border-border-custom' : ''}`}>
-              <div className="w-full md:w-48 h-32 rounded-2xl bg-bg-primary border border-border-custom flex items-center justify-center text-accent overflow-hidden">
-                {event.image ? (
-                  <img src={event.image} alt={event.title} className="w-full h-full object-cover" />
-                ) : (
-                  <Calendar size={48} />
-                )}
+      <div className="bg-bg-secondary border border-border-custom rounded-2xl overflow-hidden shadow-md">
+        <div className="p-4 space-y-4">
+          {filteredMeetups.map((event, idx) => (
+            <div key={event.id} className={`flex gap-4 pb-4 ${idx !== filteredMeetups.length - 1 ? 'border-b border-border-custom' : ''}`}>
+              <div className="w-16 h-16 rounded-lg bg-bg-primary border border-border-custom flex items-center justify-center text-accent shrink-0">
+                <Calendar size={24} />
               </div>
-              <div className="flex-grow space-y-4">
+              <div className="flex-grow space-y-1">
                 <div className="flex justify-between items-start">
                   <div>
-                    <h3 className="text-2xl font-black uppercase italic tracking-tighter text-text-primary">{event.title}</h3>
-                    <div className="flex items-center gap-4 mt-2">
-                      <span className="text-xs font-black uppercase tracking-widest text-accent">{event.date}</span>
-                      <span className="text-xs font-bold uppercase tracking-widest text-text-secondary">{event.time}</span>
+                    <h3 className="text-sm font-bold uppercase italic tracking-tighter text-text-primary">
+                      {event.name || event.title}
+                    </h3>
+                    <div className="flex flex-wrap items-center gap-2 mt-1">
+                      <span className="text-[9px] font-bold uppercase tracking-widest text-accent">{event.date}</span>
+                      {event.time && (
+                        <span className="text-[9px] font-bold uppercase tracking-widest text-text-secondary">• {event.time}</span>
+                      )}
+                      {event.location && (
+                        <span className="text-[9px] font-bold uppercase tracking-widest text-text-secondary">• {event.location}</span>
+                      )}
                     </div>
                   </div>
-                  <div className="flex gap-4">
-                    <button onClick={() => openMeetupModal(event)} className="flex items-center gap-2 px-4 py-2 bg-bg-primary border border-border-custom rounded-xl text-[10px] font-black uppercase tracking-widest hover:border-accent transition-all">
-                      <Edit2 size={12} /> Edit
+                  <div className="flex gap-1">
+                    <button
+                      type="button"
+                      onClick={() => openEditMeetupModal(event)}
+                      className="p-1 hover:text-accent transition-colors cursor-pointer"
+                    >
+                      <Edit2 size={12} />
                     </button>
-                    <button onClick={() => deleteMeetup(event.id)} className="flex items-center gap-2 px-4 py-2 bg-rose-500/10 border border-rose-500/20 text-rose-500 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-rose-500 hover:text-white transition-all">
-                      <Trash2 size={12} /> Delete
+                    <button
+                      type="button"
+                      onClick={() => handleDelete('meetups', event.id)}
+                      className="p-1 hover:text-rose-500 transition-colors cursor-pointer"
+                    >
+                      <Trash2 size={12} />
                     </button>
                   </div>
                 </div>
-                <p className="text-sm text-text-secondary font-light leading-relaxed max-w-2xl">
-                  {event.description}
-                </p>
               </div>
             </div>
           ))}
@@ -512,6 +575,276 @@ export default function Admin() {
       </div>
     </div>
   );
+
+  // Instant, zero-glitch modal rendering without GPU-heavy backdrop-blur or competing keyframe animations
+  const modalPortal =
+    typeof document !== 'undefined' && isModalOpen
+      ? createPortal(
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+            <div
+              onClick={() => setIsModalOpen(false)}
+              className="fixed inset-0 bg-black/80 z-0 transition-opacity"
+            />
+            <div className="relative z-10 m-auto w-full max-w-lg max-h-[88vh] overflow-y-auto no-scrollbar bg-bg-secondary border border-border-custom rounded-3xl p-6 sm:p-8 shadow-2xl text-text-primary">
+              <div className="flex items-center justify-between pb-4 mb-6 border-b border-border-custom">
+                <div>
+                  <span className="text-[10px] font-black uppercase tracking-[0.25em] text-accent block mb-1">
+                    CMS Inventory Manager
+                  </span>
+                  <h3 className="text-xl sm:text-2xl font-black uppercase italic tracking-tight">
+                    {modalMode === 'edit' ? 'Update' : 'Add New'}{' '}
+                    {activeTab === 'fridge' ? 'Product' : activeTab === 'wholesale' ? 'Crate' : 'Event'}
+                  </h3>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setIsModalOpen(false)}
+                  className="p-2 rounded-full hover:bg-bg-primary text-text-secondary hover:text-text-primary transition-colors cursor-pointer"
+                >
+                  <X size={20} />
+                </button>
+              </div>
+
+              <form onSubmit={handleFormSubmit} className="space-y-4">
+                {activeTab !== 'meetups' ? (
+                  <>
+                    <div>
+                      <label className="block text-[10px] font-black uppercase tracking-widest text-text-secondary mb-1.5">
+                        {activeTab === 'fridge' ? 'Product Name *' : 'Crate Name *'}
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
+                        placeholder={activeTab === 'fridge' ? 'e.g. Aged Reserve Bourbon' : 'e.g. Premium Stout Crate'}
+                        className="w-full px-4 py-3 bg-bg-primary border border-border-custom rounded-xl text-sm text-text-primary focus:outline-none focus:border-accent"
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3">
+                      {activeTab === 'fridge' ? (
+                        <div>
+                          <label className="block text-[10px] font-black uppercase tracking-widest text-text-secondary mb-1.5">
+                            Category
+                          </label>
+                          <select
+                            value={category}
+                            onChange={(e) => setCategory(e.target.value)}
+                            className="w-full px-4 py-3 bg-bg-primary border border-border-custom rounded-xl text-sm text-text-primary focus:outline-none focus:border-accent"
+                          >
+                            {FRIDGE_CATEGORIES.map((cat) => (
+                              <option key={cat} value={cat}>
+                                {cat}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                      ) : (
+                        <div>
+                          <label className="block text-[10px] font-black uppercase tracking-widest text-text-secondary mb-1.5">
+                            Crate Size / Units
+                          </label>
+                          <input
+                            type="text"
+                            value={size}
+                            onChange={(e) => setSize(e.target.value)}
+                            placeholder="e.g. 24 Bottles"
+                            className="w-full px-4 py-3 bg-bg-primary border border-border-custom rounded-xl text-sm text-text-primary focus:outline-none focus:border-accent"
+                          />
+                        </div>
+                      )}
+
+                      <div>
+                        <label className="block text-[10px] font-black uppercase tracking-widest text-text-secondary mb-1.5">
+                          Price (₦) *
+                        </label>
+                        <input
+                          type="number"
+                          min="0"
+                          required
+                          value={price}
+                          onChange={(e) => setPrice(e.target.value)}
+                          className="w-full px-4 py-3 bg-bg-primary border border-border-custom rounded-xl text-sm text-text-primary focus:outline-none focus:border-accent"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-[10px] font-black uppercase tracking-widest text-text-secondary mb-1.5">
+                          Stock Units *
+                        </label>
+                        <input
+                          type="number"
+                          min="0"
+                          required
+                          value={stock}
+                          onChange={(e) => setStock(e.target.value)}
+                          className="w-full px-4 py-3 bg-bg-primary border border-border-custom rounded-xl text-sm text-text-primary focus:outline-none focus:border-accent"
+                        />
+                      </div>
+
+                      {activeTab === 'fridge' && (
+                        <div>
+                          <label className="block text-[10px] font-black uppercase tracking-widest text-text-secondary mb-1.5">
+                            Bottle / Pack Size
+                          </label>
+                          <input
+                            type="text"
+                            value={size}
+                            onChange={(e) => setSize(e.target.value)}
+                            placeholder="e.g. 75cl, 50cl, Large"
+                            className="w-full px-4 py-3 bg-bg-primary border border-border-custom rounded-xl text-sm text-text-primary focus:outline-none focus:border-accent"
+                          />
+                        </div>
+                      )}
+                    </div>
+
+                    {activeTab === 'fridge' && (
+                      <>
+                        <div>
+                          <label className="block text-[10px] font-black uppercase tracking-widest text-text-secondary mb-1.5">
+                            Tasting Notes (Comma-Separated)
+                          </label>
+                          <input
+                            type="text"
+                            value={flavorNotes}
+                            onChange={(e) => setFlavorNotes(e.target.value)}
+                            placeholder="e.g. Smoky, Oaky, Vanilla"
+                            className="w-full px-4 py-3 bg-bg-primary border border-border-custom rounded-xl text-sm text-text-primary focus:outline-none focus:border-accent"
+                          />
+                        </div>
+
+                        <label className="flex items-center justify-between p-3.5 bg-bg-primary border border-border-custom rounded-xl cursor-pointer hover:border-accent/50 transition-colors">
+                          <div className="flex items-center gap-2.5">
+                            <Star size={16} className={isFeatured ? 'text-accent' : 'text-text-secondary'} fill={isFeatured ? 'currentColor' : 'none'} />
+                            <div>
+                              <div className="text-xs font-black uppercase tracking-wider text-text-primary">
+                                Feature on Home Page
+                              </div>
+                              <div className="text-[10px] text-text-secondary">
+                                Display in the Featured Selections showcase under the Hero
+                              </div>
+                            </div>
+                          </div>
+                          <input
+                            type="checkbox"
+                            checked={isFeatured}
+                            onChange={(e) => setIsFeatured(e.target.checked)}
+                            className="w-4 h-4 accent-amber-500 rounded cursor-pointer"
+                          />
+                        </label>
+                      </>
+                    )}
+
+                    <div>
+                      <label className="block text-[10px] font-black uppercase tracking-widest text-text-secondary mb-1.5">
+                        Product Image URL (Optional)
+                      </label>
+                      <input
+                        type="url"
+                        value={image}
+                        onChange={(e) => setImage(e.target.value)}
+                        placeholder="https://images.unsplash.com/..."
+                        className="w-full px-4 py-3 bg-bg-primary border border-border-custom rounded-xl text-sm text-text-primary focus:outline-none focus:border-accent"
+                      />
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div>
+                      <label className="block text-[10px] font-black uppercase tracking-widest text-text-secondary mb-1.5">
+                        Event Title *
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        value={eventName}
+                        onChange={(e) => setEventName(e.target.value)}
+                        placeholder="e.g. Saturday Reserve Tasting"
+                        className="w-full px-4 py-3 bg-bg-primary border border-border-custom rounded-xl text-sm text-text-primary focus:outline-none focus:border-accent"
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-[10px] font-black uppercase tracking-widest text-text-secondary mb-1.5">
+                          Date / Schedule *
+                        </label>
+                        <input
+                          type="text"
+                          required
+                          value={eventDate}
+                          onChange={(e) => setEventDate(e.target.value)}
+                          placeholder="e.g. Every Saturday"
+                          className="w-full px-4 py-3 bg-bg-primary border border-border-custom rounded-xl text-sm text-text-primary focus:outline-none focus:border-accent"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] font-black uppercase tracking-widest text-text-secondary mb-1.5">
+                          Time
+                        </label>
+                        <input
+                          type="text"
+                          value={eventTime}
+                          onChange={(e) => setEventTime(e.target.value)}
+                          placeholder="e.g. 6:00 PM - 9:00 PM"
+                          className="w-full px-4 py-3 bg-bg-primary border border-border-custom rounded-xl text-sm text-text-primary focus:outline-none focus:border-accent"
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-[10px] font-black uppercase tracking-widest text-text-secondary mb-1.5">
+                        Location
+                      </label>
+                      <input
+                        type="text"
+                        value={eventLocation}
+                        onChange={(e) => setEventLocation(e.target.value)}
+                        placeholder="e.g. Main Lounge"
+                        className="w-full px-4 py-3 bg-bg-primary border border-border-custom rounded-xl text-sm text-text-primary focus:outline-none focus:border-accent"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-[10px] font-black uppercase tracking-widest text-text-secondary mb-1.5">
+                        Description
+                      </label>
+                      <textarea
+                        rows={3}
+                        value={eventDescription}
+                        onChange={(e) => setEventDescription(e.target.value)}
+                        placeholder="Describe the meetup experience..."
+                        className="w-full px-4 py-3 bg-bg-primary border border-border-custom rounded-xl text-sm text-text-primary focus:outline-none focus:border-accent resize-none"
+                      />
+                    </div>
+                  </>
+                )}
+
+                <div className="flex items-center justify-end gap-3 pt-4 border-t border-border-custom">
+                  <button
+                    type="button"
+                    onClick={() => setIsModalOpen(false)}
+                    className="btn-cta-secondary px-5 py-3 rounded-xl border border-border-custom text-xs font-black uppercase tracking-widest cursor-pointer"
+                  >
+                    <span>Cancel</span>
+                  </button>
+                  <button
+                    type="submit"
+                    className="btn-cta px-6 py-3 rounded-xl text-xs font-black uppercase tracking-widest flex items-center gap-2 shadow-lg cursor-pointer"
+                  >
+                    <Check size={16} />
+                    <span>{modalMode === 'edit' ? 'Save Changes' : 'Add To Inventory'}</span>
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>,
+          document.body
+        )
+      : null;
 
   return (
     <div className="min-h-screen bg-bg-primary text-text-primary transition-colors duration-300 flex">
@@ -528,15 +861,16 @@ export default function Admin() {
             { id: 'fridge', label: 'The Fridge', icon: <Box size={18} /> },
             { id: 'wholesale', label: 'Wholesale', icon: <Package size={18} /> },
             { id: 'meetups', label: 'Meetups', icon: <Calendar size={18} /> },
-            { id: 'featured', label: 'Featured Selection', icon: <Star size={18} /> },
           ].map((item) => (
             <button
               key={item.id}
+              type="button"
               onClick={() => setActiveTab(item.id as Tab)}
-              className={`w-full flex items-center gap-4 px-6 py-4 rounded-2xl text-xs font-black uppercase tracking-widest transition-all ${activeTab === item.id
-                ? 'bg-accent text-white dark:text-black shadow-xl shadow-accent/20'
-                : 'text-text-secondary hover:bg-bg-primary hover:text-text-primary'
-                }`}
+              className={`w-full flex items-center gap-4 px-6 py-4 rounded-2xl text-xs font-black uppercase tracking-widest transition-all cursor-pointer ${
+                activeTab === item.id 
+                  ? 'bg-accent text-white dark:text-black shadow-xl shadow-accent/20' 
+                  : 'text-text-secondary hover:bg-bg-primary hover:text-text-primary'
+              }`}
             >
               {item.icon} {item.label}
             </button>
@@ -552,9 +886,10 @@ export default function Admin() {
                 <div className="text-[10px] text-text-secondary">Master Access</div>
               </div>
             </div>
-            <button
+            <button 
+              type="button"
               onClick={handleLogout}
-              className="w-full flex items-center justify-center gap-3 py-3 bg-rose-500/10 text-rose-500 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-rose-500 hover:text-white transition-all"
+              className="w-full flex items-center justify-center gap-3 py-3 bg-rose-500/10 text-rose-500 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-rose-500 hover:text-white transition-all cursor-pointer"
             >
               <LogOut size={14} /> Sign Out
             </button>
@@ -571,14 +906,15 @@ export default function Admin() {
               <div className="flex items-center gap-2 text-accent text-[10px] lg:text-xs font-black uppercase tracking-[0.3em] mb-1 lg:mb-2">
                 <ShieldCheck size={14} /> System Management
               </div>
-              <h1 className="text-3xl sm:text-4xl md:text-7xl font-black uppercase italic tracking-tighter text-text-primary leading-none">
+              <h1 className="text-3xl sm:text-4xl font-black uppercase italic tracking-tighter text-text-primary leading-none">
                 Control <span className="text-accent">Center</span>
               </h1>
             </div>
             {/* Mobile Logout */}
-            <button
+            <button 
+              type="button"
               onClick={handleLogout}
-              className="lg:hidden p-3 bg-rose-500/10 text-rose-500 rounded-2xl hover:bg-rose-500 hover:text-white transition-all"
+              className="lg:hidden p-3 bg-rose-500/10 text-rose-500 rounded-2xl hover:bg-rose-500 hover:text-white transition-all cursor-pointer"
             >
               <LogOut size={20} />
             </button>
@@ -588,8 +924,8 @@ export default function Admin() {
             <SettingsControls />
             <div className="relative flex-grow md:flex-grow-0">
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-text-secondary" size={18} />
-              <input
-                type="text"
+              <input 
+                type="text" 
                 placeholder="Search everything..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
@@ -603,18 +939,12 @@ export default function Admin() {
           </div>
         </header>
 
-        {/* Tab Content */}
-        <motion.div
-          key={activeTab}
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4 }}
-        >
+        {/* Tab Content - Instant render without competing motion y-shifts */}
+        <div>
           {activeTab === 'fridge' && renderFridge()}
           {activeTab === 'wholesale' && renderWholesale()}
           {activeTab === 'meetups' && renderMeetups()}
-          {activeTab === 'featured' && renderFeatured()}
-        </motion.div>
+        </div>
       </main>
 
       {/* Mobile Navigation */}
@@ -623,15 +953,16 @@ export default function Admin() {
           { id: 'fridge', label: 'Fridge', icon: <Box size={20} /> },
           { id: 'wholesale', label: 'Wholesale', icon: <Package size={20} /> },
           { id: 'meetups', label: 'Meetups', icon: <Calendar size={20} /> },
-          { id: 'featured', label: 'Featured', icon: <Star size={20} /> },
         ].map((item) => (
           <button
             key={item.id}
+            type="button"
             onClick={() => setActiveTab(item.id as Tab)}
-            className={`flex flex-col items-center gap-1 p-2 rounded-xl transition-all ${activeTab === item.id
-              ? 'text-accent'
-              : 'text-text-secondary hover:text-text-primary'
-              }`}
+            className={`flex flex-col items-center gap-1 p-2 rounded-xl transition-all cursor-pointer ${
+              activeTab === item.id 
+                ? 'text-accent' 
+                : 'text-text-secondary hover:text-text-primary'
+            }`}
           >
             {item.icon}
             <span className="text-[10px] font-black uppercase tracking-widest">{item.label}</span>
@@ -639,151 +970,8 @@ export default function Admin() {
         ))}
       </nav>
 
-      {/* Product Modal */}
-      <AnimatePresence>
-        {isProductModalOpen && (
-          <motion.div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-            <motion.div initial={{ scale: 0.95 }} animate={{ scale: 1 }} exit={{ scale: 0.95 }} className="bg-bg-secondary border border-border-custom rounded-3xl p-6 w-full max-w-5xl max-h-[90vh] overflow-y-auto no-scrollbar">
-              <div className="flex justify-between items-center mb-6">
-                <h3 className="text-xl font-black uppercase italic tracking-tighter">{editingItem ? 'Edit Product' : 'Add Product'}</h3>
-                <button onClick={() => setProductModalOpen(false)} className="p-2 hover:bg-bg-primary rounded-xl"><X size={20} /></button>
-              </div>
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                {/* Left Side: Form Fields */}
-                <div className="space-y-4">
-                  <input type="text" placeholder="Name" value={productForm.name} onChange={e => setProductForm({ ...productForm, name: e.target.value })} className="w-full p-3 bg-bg-primary border border-border-custom rounded-xl" />
-                  <div className="flex gap-4">
-                    <input type="number" placeholder="Price" value={productForm.price} onChange={e => setProductForm({ ...productForm, price: Number(e.target.value) })} className="w-full p-3 bg-bg-primary border border-border-custom rounded-xl" />
-                    <input type="number" placeholder="Stock" value={productForm.stock} onChange={e => setProductForm({ ...productForm, stock: Number(e.target.value) })} className="w-full p-3 bg-bg-primary border border-border-custom rounded-xl" />
-                  </div>
-                  <input type="text" placeholder="Category" value={productForm.category} onChange={e => setProductForm({ ...productForm, category: e.target.value })} className="w-full p-3 bg-bg-primary border border-border-custom rounded-xl" />
-                  <input type="text" placeholder="Size" value={productForm.size} onChange={e => setProductForm({ ...productForm, size: e.target.value })} className="w-full p-3 bg-bg-primary border border-border-custom rounded-xl" />
-                  <div className="space-y-2">
-                    <label className="text-xs font-bold uppercase tracking-widest text-text-secondary">Image</label>
-                    <div className="flex gap-2">
-                      <input type="text" placeholder="Image URL" value={productForm.image} onChange={e => setProductForm({ ...productForm, image: e.target.value })} className="w-full p-3 bg-bg-primary border border-border-custom rounded-xl" />
-                      <label className="flex items-center justify-center px-4 bg-bg-primary border border-border-custom rounded-xl cursor-pointer hover:border-accent transition-colors shrink-0">
-                        {isUploading ? <div className="w-5 h-5 border-2 border-accent border-t-transparent rounded-full animate-spin" /> : <Upload size={20} className="text-text-secondary" />}
-                        <input type="file" accept="image/*" className="hidden" onChange={e => handleImageUpload(e, setProductForm, productForm)} disabled={isUploading} />
-                      </label>
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-xs font-bold uppercase tracking-widest text-text-secondary">3D Model (.glb)</label>
-                    <div className="flex gap-2">
-                      <input type="text" placeholder="3D Model URL (from Supabase)" value={productForm.model_3d_url} onChange={e => setProductForm({ ...productForm, model_3d_url: e.target.value })} className="w-full p-3 bg-bg-primary border border-border-custom rounded-xl" />
-                    </div>
-                  </div>
-                  <button onClick={saveProduct} className="w-full py-3 btn-cta text-white dark:text-black font-black uppercase tracking-widest rounded-xl">Save</button>
-                </div>
-
-                {/* Right Side: Visual Preview */}
-                <div className="flex flex-col bg-bg-primary border border-border-custom rounded-3xl overflow-hidden h-full min-h-[300px] sm:min-h-[400px] relative">
-                  <div className="absolute top-4 left-4 z-20 px-3 py-1 bg-black/50 backdrop-blur-md rounded-full border border-white/10 text-[10px] font-black uppercase tracking-widest text-white">
-                    Live Preview
-                  </div>
-                  <div className="flex-grow w-full h-full flex items-center justify-center p-6 relative">
-                    {/* Spotlight behind model/image */}
-                    <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full bg-gradient-to-b from-accent/10 via-transparent to-transparent opacity-50 pointer-events-none z-0" />
-
-                    {productForm.model_3d_url ? (
-                      <model-viewer
-                        src={productForm.model_3d_url}
-                        alt="3D Preview"
-                        auto-rotate
-                        camera-controls
-                        camera-orbit="0deg 75deg 150%"
-                        shadow-intensity="1"
-                        style={{ width: '100%', height: '100%', backgroundColor: 'transparent', zIndex: 10 }}
-                      ></model-viewer>
-                    ) : productForm.image ? (
-                      <img
-                        src={productForm.image}
-                        alt="Preview"
-                        className="h-full object-contain drop-shadow-[0_10px_20px_rgba(0,0,0,0.5)] z-10"
-                        referrerPolicy="no-referrer"
-                      />
-                    ) : (
-                      <div className="text-text-secondary font-black uppercase tracking-widest text-sm opacity-30 z-10 text-center px-4">
-                        <Box size={48} className="mx-auto mb-4" />
-                        No Media Available
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Crate Modal */}
-      <AnimatePresence>
-        {isCrateModalOpen && (
-          <motion.div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-            <motion.div initial={{ scale: 0.95 }} animate={{ scale: 1 }} exit={{ scale: 0.95 }} className="bg-bg-secondary border border-border-custom rounded-3xl p-6 w-full max-w-md">
-              <div className="flex justify-between items-center mb-6">
-                <h3 className="text-xl font-black uppercase italic tracking-tighter">{editingItem ? 'Edit Crate' : 'Add Crate'}</h3>
-                <button onClick={() => setCrateModalOpen(false)} className="p-2 hover:bg-bg-primary rounded-xl"><X size={20} /></button>
-              </div>
-              <div className="space-y-4">
-                <input type="text" placeholder="Name" value={crateForm.name} onChange={e => setCrateForm({ ...crateForm, name: e.target.value })} className="w-full p-3 bg-bg-primary border border-border-custom rounded-xl" />
-                <div className="flex gap-4">
-                  <input type="text" placeholder="Quantity (e.g. 12 Bottles)" value={crateForm.qty} onChange={e => setCrateForm({ ...crateForm, qty: e.target.value })} className="w-full p-3 bg-bg-primary border border-border-custom rounded-xl" />
-                  <input type="text" placeholder="Price (e.g. ₦20)" value={crateForm.price} onChange={e => setCrateForm({ ...crateForm, price: e.target.value })} className="w-full p-3 bg-bg-primary border border-border-custom rounded-xl" />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-xs font-bold uppercase tracking-widest text-text-secondary">Image</label>
-                  <div className="flex gap-2">
-                    <input type="text" placeholder="Image URL" value={crateForm.image} onChange={e => setCrateForm({ ...crateForm, image: e.target.value })} className="w-full p-3 bg-bg-primary border border-border-custom rounded-xl" />
-                    <label className="flex items-center justify-center px-4 bg-bg-primary border border-border-custom rounded-xl cursor-pointer hover:border-accent transition-colors shrink-0">
-                      {isUploading ? <div className="w-5 h-5 border-2 border-accent border-t-transparent rounded-full animate-spin" /> : <Upload size={20} className="text-text-secondary" />}
-                      <input type="file" accept="image/*" className="hidden" onChange={e => handleImageUpload(e, setCrateForm, crateForm)} disabled={isUploading} />
-                    </label>
-                  </div>
-                </div>
-                <textarea placeholder="Description" value={crateForm.description} onChange={e => setCrateForm({ ...crateForm, description: e.target.value })} className="w-full p-3 bg-bg-primary border border-border-custom rounded-xl h-24" />
-                <input type="text" placeholder="Options (comma separated)" value={crateForm.options} onChange={e => setCrateForm({ ...crateForm, options: e.target.value })} className="w-full p-3 bg-bg-primary border border-border-custom rounded-xl" />
-                <button onClick={saveCrate} className="w-full py-3 btn-cta text-white dark:text-black font-black uppercase tracking-widest rounded-xl">Save</button>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Meetup Modal */}
-      <AnimatePresence>
-        {isMeetupModalOpen && (
-          <motion.div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-            <motion.div initial={{ scale: 0.95 }} animate={{ scale: 1 }} exit={{ scale: 0.95 }} className="bg-bg-secondary border border-border-custom rounded-3xl p-6 w-full max-w-md">
-              <div className="flex justify-between items-center mb-6">
-                <h3 className="text-xl font-black uppercase italic tracking-tighter">{editingItem ? 'Edit Event' : 'Add Event'}</h3>
-                <button onClick={() => setMeetupModalOpen(false)} className="p-2 hover:bg-bg-primary rounded-xl"><X size={20} /></button>
-              </div>
-              <div className="space-y-4">
-                <input type="text" placeholder="Title" value={meetupForm.title} onChange={e => setMeetupForm({ ...meetupForm, title: e.target.value })} className="w-full p-3 bg-bg-primary border border-border-custom rounded-xl" />
-                <div className="flex gap-4">
-                  <input type="text" placeholder="Date" value={meetupForm.date} onChange={e => setMeetupForm({ ...meetupForm, date: e.target.value })} className="w-full p-3 bg-bg-primary border border-border-custom rounded-xl" />
-                  <input type="text" placeholder="Time" value={meetupForm.time} onChange={e => setMeetupForm({ ...meetupForm, time: e.target.value })} className="w-full p-3 bg-bg-primary border border-border-custom rounded-xl" />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-xs font-bold uppercase tracking-widest text-text-secondary">Image (optional)</label>
-                  <div className="flex gap-2">
-                    <input type="text" placeholder="Image URL" value={meetupForm.image} onChange={e => setMeetupForm({ ...meetupForm, image: e.target.value })} className="w-full p-3 bg-bg-primary border border-border-custom rounded-xl" />
-                    <label className="flex items-center justify-center px-4 bg-bg-primary border border-border-custom rounded-xl cursor-pointer hover:border-accent transition-colors shrink-0">
-                      {isUploading ? <div className="w-5 h-5 border-2 border-accent border-t-transparent rounded-full animate-spin" /> : <Upload size={20} className="text-text-secondary" />}
-                      <input type="file" accept="image/*" className="hidden" onChange={e => handleImageUpload(e, setMeetupForm, meetupForm)} disabled={isUploading} />
-                    </label>
-                  </div>
-                </div>
-                <textarea placeholder="Description" value={meetupForm.description} onChange={e => setMeetupForm({ ...meetupForm, description: e.target.value })} className="w-full p-3 bg-bg-primary border border-border-custom rounded-xl h-24" />
-                <button onClick={saveMeetup} className="w-full py-3 btn-cta text-white dark:text-black font-black uppercase tracking-widest rounded-xl">Save</button>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
+      {/* Add / Edit Item Modal */}
+      {modalPortal}
     </div>
   );
 }

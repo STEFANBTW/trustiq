@@ -1,8 +1,9 @@
-// Wholesale.tsx
 import { motion, AnimatePresence } from 'motion/react';
 import { Package, Truck, ShieldCheck, ArrowRight, Star, GlassWater, Music, Users, CheckCircle2, ShoppingBag, Calendar, Store, X, Plus, Minus, Info } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+
+import { useInventory } from '../context/InventoryContext';
 
 const eventOptions = [
   {
@@ -35,26 +36,13 @@ const eventOptions = [
   }
 ];
 
-import { supabase } from '../lib/supabase';
-
-// Wholesale.tsx
 export default function Wholesale() {
   const [formStep, setFormStep] = useState(1);
   const [selectedCrate, setSelectedCrate] = useState<any>(null);
   const [crateCount, setCrateCount] = useState(1);
   const [isMixing, setIsMixing] = useState(false);
-  const [crateProducts, setCrateProducts] = useState<any[]>([]);
   const navigate = useNavigate();
-
-  useEffect(() => {
-    supabase.from('wholesale').select('*').then(({ data, error }) => {
-      if (error) {
-        console.error("Error fetching wholesale:", error);
-        return;
-      }
-      if (data) setCrateProducts(data);
-    });
-  }, []);
+  const { wholesale, addToCart } = useInventory();
 
   return (
     <div className="flex flex-col bg-bg-primary min-h-screen text-text-primary transition-colors duration-300">
@@ -80,7 +68,7 @@ export default function Wholesale() {
           initial={{ opacity: 0.9 }}
           animate={{ opacity: 0.6 }}
           transition={{ duration: 2, ease: "easeOut" }}
-          className="absolute inset-0 hidden dark:block bg-black/50 pointer-events-none" 
+          className="absolute inset-0 hidden dark:block bg-black/56 pointer-events-none" 
         />
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(245,158,11,0.1),transparent_70%)] pointer-events-none" />
         <div className="relative z-10 text-center px-6 max-w-7xl mx-auto w-full">
@@ -118,7 +106,7 @@ export default function Wholesale() {
         </div>
 
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
-          {crateProducts.map((crate, idx) => (
+          {wholesale.map((crate, idx) => (
             <motion.div 
               key={idx}
               initial={{ opacity: 0, scale: 0.95 }}
@@ -128,7 +116,7 @@ export default function Wholesale() {
               onClick={() => setSelectedCrate(crate)}
               className="group cursor-pointer bg-bg-secondary border border-border-custom rounded-2xl overflow-hidden hover:border-accent/50 transition-all duration-500 shadow-lg flex flex-col"
             >
-              <div className="relative h-44 sm:h-56 overflow-hidden shrink-0">
+              <div className="relative h-32 sm:h-48 overflow-hidden shrink-0">
                 <img src={crate.image} alt={crate.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" referrerPolicy="no-referrer" />
                 <div className="absolute inset-0 bg-gradient-to-t from-bg-secondary to-transparent opacity-60" />
                 <div className="absolute bottom-2 left-2 sm:bottom-4 sm:left-4 flex flex-wrap gap-1 sm:gap-2">
@@ -140,12 +128,12 @@ export default function Wholesale() {
                 <div>
                   <h3 className="text-xs sm:text-lg font-black uppercase tracking-tight text-text-primary line-clamp-2">{crate.name}</h3>
                   <div className="flex justify-between items-center mt-1 sm:mt-2">
-                    <span className="text-[10px] sm:text-xs text-text-secondary font-bold">{crate.qty}</span>
-                    <span className="text-xs sm:text-base text-accent font-black">{crate.price}</span>
+                    <span className="text-[10px] sm:text-xs text-text-secondary font-bold">{crate.qty || '12-24 Units'}</span>
+                    <span className="text-xs sm:text-base text-accent font-black">₦{crate.price}</span>
                   </div>
                 </div>
-                <button className="w-full mt-2 sm:mt-4 py-2 sm:py-3 bg-bg-primary border border-border-custom group-hover:border-accent group-hover:text-accent text-[8px] sm:text-xs font-black uppercase tracking-widest transition-all rounded-lg flex items-center justify-center gap-1 sm:gap-2">
-                  <Info className="w-3 h-3 sm:w-[14px] sm:h-[14px]" /> View Details
+                <button className="btn-cta-secondary w-full mt-2 sm:mt-4 py-2 sm:py-3 border border-border-custom text-[8px] sm:text-xs font-black uppercase tracking-widest rounded-lg flex items-center justify-center gap-1 sm:gap-2">
+                  <Info className="w-3 h-3 sm:w-[14px] sm:h-[14px]" /> <span>View Details</span>
                 </button>
               </div>
             </motion.div>
@@ -153,8 +141,8 @@ export default function Wholesale() {
         </div>
 
         <div className="mt-16 flex flex-col items-center gap-8">
-          <Link to="/wholesale/bulk" className="px-6 py-3 md:px-12 md:py-5 bg-bg-secondary border border-border-custom hover:border-accent hover:text-accent text-text-primary text-xs md:text-base font-black uppercase tracking-widest rounded-full transition-all flex items-center gap-2 md:gap-4 group">
-            See More Options <ArrowRight className="w-4 h-4 md:w-5 md:h-5 group-hover:translate-x-1 transition-transform" />
+          <Link to="/wholesale/bulk" className="btn-cta-secondary px-6 py-3 md:px-12 md:py-5 border border-border-custom text-xs md:text-base font-black uppercase tracking-widest rounded-full flex items-center gap-2 md:gap-4 group">
+            <span>See More Options</span> <ArrowRight className="w-4 h-4 md:w-5 md:h-5 group-hover:translate-x-1 transition-transform" />
           </Link>
           
           <div className="flex items-center gap-4 p-6 bg-accent/5 border border-accent/20 rounded-3xl max-w-2xl text-center">
@@ -167,9 +155,9 @@ export default function Wholesale() {
             </div>
             <button 
               onClick={() => setIsMixing(true)}
-              className="px-6 py-3 btn-cta text-white dark:text-black font-black uppercase tracking-widest text-xs rounded-xl hover:scale-105 hover:brightness-110 active:scale-95 transition-all shrink-0"
+              className="btn-cta px-6 py-3 font-black uppercase tracking-widest text-xs rounded-xl shrink-0"
             >
-              Start Mixing
+              <span>Start Mixing</span>
             </button>
           </div>
         </div>
@@ -219,8 +207,8 @@ export default function Wholesale() {
                       </div>
                     ))}
                   </div>
-                  <button className="w-full py-3 border border-border-custom group-hover:border-accent group-hover:text-accent font-black uppercase tracking-widest text-xs transition-all rounded-xl">
-                    View Details
+                  <button className="btn-cta-secondary w-full py-3 border border-border-custom font-black uppercase tracking-widest text-xs rounded-xl">
+                    <span>View Details</span>
                   </button>
                 </div>
               </motion.div>
@@ -260,8 +248,8 @@ export default function Wholesale() {
                 <p className="text-[8px] sm:text-xs text-text-secondary">Guaranteed 4-hour restocking for emergency shortages.</p>
               </div>
             </div>
-            <button className="px-6 py-3 md:px-12 md:py-5 btn-cta text-white dark:text-black text-xs md:text-base font-black uppercase tracking-widest rounded-full hover:scale-105 hover:brightness-110 active:scale-95 transition-all shadow-xl shadow-accent/20">
-              Become A Partner
+            <button className="btn-cta px-6 py-3 md:px-12 md:py-5 text-xs md:text-base font-black uppercase tracking-widest rounded-full shadow-xl shadow-accent/20">
+              <span>Become A Partner</span>
             </button>
           </div>
           <div className="relative">
@@ -314,9 +302,9 @@ export default function Wholesale() {
                 </div>
                 <button 
                   onClick={() => setFormStep(2)}
-                  className="w-full py-4 btn-cta hover:scale-105 hover:brightness-110 active:scale-95 text-white dark:text-black font-black uppercase tracking-widest rounded-xl transition-colors mt-8"
+                  className="btn-cta w-full py-4 font-black uppercase tracking-widest rounded-xl mt-8"
                 >
-                  Next Step
+                  <span>Next Step</span>
                 </button>
               </motion.div>
             ) : (
@@ -343,9 +331,9 @@ export default function Wholesale() {
                   </button>
                   <button 
                     onClick={() => alert('Application Submitted!')}
-                    className="w-2/3 py-4 btn-cta hover:scale-105 hover:brightness-110 active:scale-95 text-white dark:text-black font-black uppercase tracking-widest rounded-xl transition-colors"
+                    className="btn-cta w-2/3 py-4 font-black uppercase tracking-widest rounded-xl"
                   >
-                    Submit Request
+                    <span>Submit Request</span>
                   </button>
                 </div>
               </motion.div>
@@ -426,20 +414,60 @@ export default function Wholesale() {
                     <div className="flex justify-between items-end">
                       <div className="space-y-1">
                         <span className="text-xs font-bold uppercase tracking-widest text-text-secondary">Unit Price</span>
-                        <div className="text-2xl font-black text-accent">{selectedCrate.price}</div>
+                        <div className="text-2xl font-black text-accent">₦{Number(String(selectedCrate.price).replace(/[^0-9.]/g, '') || 500).toLocaleString()}</div>
                       </div>
                       <div className="text-right space-y-1">
                         <span className="text-xs font-bold uppercase tracking-widest text-text-secondary">Total Estimate</span>
-                        <div className="text-3xl font-black text-text-primary">₦{(parseInt(selectedCrate.price.replace('₦', '').replace(',', '')) * crateCount).toLocaleString()}</div>
+                        <div className="text-3xl font-black text-text-primary">
+                          ₦{((Number(String(selectedCrate.price).replace(/[^0-9.]/g, '')) || 500) * crateCount).toLocaleString()}
+                        </div>
                       </div>
                     </div>
                   </div>
 
                   <div className="flex gap-4">
-                    <button className="flex-grow py-4 btn-cta text-white dark:text-black font-black uppercase tracking-widest rounded-xl hover:scale-105 hover:brightness-110 active:scale-95 transition-all shadow-xl shadow-accent/20">
-                      Pick Immediately
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const unitPrice = Number(String(selectedCrate.price).replace(/[^0-9.]/g, '')) || 500;
+                        addToCart(
+                          {
+                            id: selectedCrate.id,
+                            name: selectedCrate.name,
+                            price: unitPrice,
+                            image: selectedCrate.image,
+                            category: 'Wholesale',
+                            size: selectedCrate.size || 'Crate',
+                          },
+                          crateCount
+                        );
+                        setSelectedCrate(null);
+                        navigate('/cart');
+                      }}
+                      className="btn-cta flex-grow py-4 font-black uppercase tracking-widest rounded-xl shadow-xl shadow-accent/20 cursor-pointer"
+                    >
+                      <span>Pick Immediately</span>
                     </button>
-                    <button className="p-4 bg-bg-secondary border border-border-custom rounded-xl hover:border-accent transition-colors">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const unitPrice = Number(String(selectedCrate.price).replace(/[^0-9.]/g, '')) || 500;
+                        addToCart(
+                          {
+                            id: selectedCrate.id,
+                            name: selectedCrate.name,
+                            price: unitPrice,
+                            image: selectedCrate.image,
+                            category: 'Wholesale',
+                            size: selectedCrate.size || 'Crate',
+                          },
+                          crateCount
+                        );
+                        setSelectedCrate(null);
+                      }}
+                      title="Add Crate to Cart"
+                      className="p-4 bg-bg-secondary border border-border-custom rounded-xl hover:border-accent hover:text-accent transition-colors cursor-pointer"
+                    >
                       <ShoppingBag size={20} />
                     </button>
                   </div>
@@ -511,7 +539,7 @@ export default function Wholesale() {
                 <div className="w-full h-2 bg-bg-secondary rounded-full overflow-hidden">
                   <div className="w-0 h-full bg-accent transition-all duration-500" />
                 </div>
-                <button className="w-full py-5 btn-cta text-white dark:text-black font-black uppercase tracking-widest rounded-xl opacity-50 cursor-not-allowed">
+                <button className="w-full py-5 bg-accent text-white dark:text-black font-black uppercase tracking-widest rounded-xl opacity-50 cursor-not-allowed">
                   Confirm Configuration
                 </button>
               </div>

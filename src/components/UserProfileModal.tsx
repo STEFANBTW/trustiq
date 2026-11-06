@@ -85,8 +85,8 @@ export const UserProfileModal = ({
                   onChange={(e) => setPassword(e.target.value)}
                   required
                 />
-                <button type="submit" className="w-full py-4 btn-cta hover:scale-105 hover:brightness-110 active:scale-95 transition-colors rounded-2xl text-white dark:text-black font-black uppercase tracking-widest text-xs shadow-[0_0_15px_rgba(245,158,11,0.3)]">
-                  {showRegister ? 'Register' : 'Sign In'}
+                <button type="submit" className="btn-cta w-full py-4 rounded-2xl font-black uppercase tracking-widest text-xs shadow-[0_0_15px_rgba(245,158,11,0.3)]">
+                  <span>{showRegister ? 'Register' : 'Sign In'}</span>
                 </button>
                 <button 
                   type="button"

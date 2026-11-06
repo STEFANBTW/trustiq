@@ -1,32 +1,25 @@
-import { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
-import { Wine, ArrowRight, Star, ShieldCheck, Zap, Crown, Users, Music, LayoutGrid, Droplets, Box, GlassWater } from 'lucide-react';
+import { Wine, ArrowRight, Star, ShieldCheck, Zap, Crown, ShoppingCart, Check } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { supabase } from '../lib/supabase';
+import { useState } from 'react';
+import { useInventory } from '../context/InventoryContext';
 
 export default function Home() {
-  const [featuredProducts, setFeaturedProducts] = useState<any[]>([]);
+  const { fridge, addToCart } = useInventory();
+  const [addedId, setAddedId] = useState<number | null>(null);
 
-  useEffect(() => {
-    supabase
-      .from('products')
-      .select('*')
-      .eq('is_featured', true)
-      .limit(4)
-      .then(({ data, error }) => {
-        if (error) {
-          console.error("Error fetching featured products:", error);
-          return;
-        }
-        if (data) {
-          setFeaturedProducts(data.map(r => ({
-            ...r,
-            flavorProfile: r.flavor_profile,
-            isPremium: Boolean(r.is_premium)
-          })));
-        }
-      });
-  }, []);
+  const handleFeaturedAdd = (product: typeof fridge[number]) => {
+    addToCart(product, 1);
+    setAddedId(product.id);
+    window.setTimeout(() => {
+      setAddedId((curr) => (curr === product.id ? null : curr));
+    }, 1200);
+  };
+
+  // Featured Selections driven directly by the Admin Dashboard (InventoryContext)
+  const featuredFlagged = fridge.filter((p) => p.isFeatured);
+  const featuredProducts = (featuredFlagged.length > 0 ? featuredFlagged : fridge).slice(0, 4);
+
   return (
     <div className="flex flex-col bg-bg-primary">
       {/* Section 1: Hero - Fridge Style */}
@@ -37,23 +30,26 @@ export default function Home() {
           transition={{ duration: 20, ease: "linear", repeat: Infinity, repeatType: "reverse" }}
           src="https://images.unsplash.com/photo-1514362545857-3bc16c4c7d1b?auto=format&fit=crop&w=1920&q=80"
           alt="Premium Liquor Display"
-          className="absolute inset-0 w-full h-full object-cover transition-all duration-500"
+          className="absolute inset-0 w-full h-full object-cover opacity-15 dark:opacity-65 dark:brightness-65 transition-all duration-500"
           referrerPolicy="no-referrer"
         />
-
-        {/* Light Mode Overlay: White Radial Gradient */}
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_20%,white_90%)] dark:hidden pointer-events-none z-[1]" />
-
-        {/* Dark Mode Overlay: Minimal Dark Tint */}
-        <motion.div
-          initial={{ opacity: 0.8 }}
+        {/* Light Mode Edge Fades (White) */}
+        <div className="absolute inset-x-0 top-0 h-32 bg-gradient-to-b from-white to-white/0 dark:hidden pointer-events-none z-[1]" />
+        <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-white to-white/0 dark:hidden pointer-events-none z-[1]" />
+        <div className="absolute inset-y-0 left-0 w-32 bg-gradient-to-r from-white to-white/0 dark:hidden pointer-events-none z-[1]" />
+        <div className="absolute inset-y-0 right-0 w-32 bg-gradient-to-l from-white to-white/0 dark:hidden pointer-events-none z-[1]" />
+        
+        {/* Dark Mode Overlays */}
+        <motion.div 
+          initial={{ opacity: 0.9 }}
           animate={{ opacity: 0.6 }}
           transition={{ duration: 2, ease: "easeOut" }}
-          className="absolute inset-0 hidden dark:block bg-black pointer-events-none z-[1]"
+          className="absolute inset-0 hidden dark:block bg-black/56 pointer-events-none" 
         />
-
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(245,158,11,0.1),transparent_70%)] pointer-events-none" />
+        
         <div className="relative z-10 text-center px-6 max-w-7xl mx-auto w-full">
-          <motion.h1
+          <motion.h1 
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
@@ -68,8 +64,8 @@ export default function Home() {
             transition={{ delay: 0.4 }}
             className="mt-12"
           >
-            <Link to="/products" className="inline-flex items-center gap-2 md:gap-4 px-6 py-3 md:px-12 md:py-5 btn-cta text-white dark:text-black text-xs md:text-sm font-black uppercase tracking-widest hover:scale-105 hover:brightness-110 active:scale-95 transition-all rounded-full shadow-2xl shadow-accent/20">
-              Open The Fridge <ArrowRight size={20} className="w-4 h-4 md:w-5 md:h-5" />
+            <Link to="/products" className="btn-cta inline-flex items-center gap-2 md:gap-4 px-6 py-3 md:px-12 md:py-5 text-xs md:text-sm font-black uppercase tracking-widest rounded-full shadow-2xl shadow-accent/20">
+              <span>Open The Fridge</span> <ArrowRight size={20} className="w-4 h-4 md:w-5 md:h-5" />
             </Link>
           </motion.div>
         </div>
@@ -77,7 +73,7 @@ export default function Home() {
 
       {/* Marquee Ticker - Fridge Style */}
       <div className="overflow-hidden whitespace-nowrap bg-bg-secondary text-text-primary py-6 border-y border-border-custom relative z-20 backdrop-blur-md">
-        <motion.div
+        <motion.div 
           animate={{ x: [0, -1000] }}
           transition={{ repeat: Infinity, duration: 30, ease: "linear" }}
           className="inline-block font-black uppercase tracking-[0.3em] text-sm md:text-lg opacity-50"
@@ -86,8 +82,8 @@ export default function Home() {
         </motion.div>
       </div>
 
-      {/* Section 2: Featured Selections - Compact Grid */}
-      <section className="py-24 px-4 sm:px-8 bg-bg-primary transition-colors duration-300 min-h-[100vh] flex flex-col justify-center">
+      {/* Section 2: Featured Selections - Driven by Admin Dashboard */}
+      <section className="py-24 px-4 sm:px-8 bg-bg-primary transition-colors duration-300 min-h-[85vh] flex flex-col justify-center">
         <div className="max-w-7xl mx-auto w-full">
           <div className="flex flex-col md:flex-row items-end justify-between mb-12 gap-8">
             <div className="space-y-4">
@@ -100,60 +96,90 @@ export default function Home() {
               </h2>
             </div>
             <Link to="/products" className="text-text-secondary hover:text-accent font-black uppercase tracking-widest text-sm flex items-center gap-2 transition-colors border-b border-border-custom pb-2">
-              View All Products <ArrowRight size={16} />
+              View All ({fridge.length}) Products <ArrowRight size={16} />
             </Link>
           </div>
-
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
-            {featuredProducts.map((product, idx) => (
-              <motion.div
-                key={product.id}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: idx * 0.1 }}
-                className="group bg-bg-secondary border border-border-custom rounded-2xl sm:rounded-3xl overflow-hidden hover:border-accent/50 transition-all duration-500 shadow-lg flex flex-col h-[350px] sm:h-[500px]"
-              >
-                <div className="relative h-[65%] overflow-hidden bg-bg-primary flex items-center justify-center p-4 sm:p-8">
-                  <img
-                    src={product.image}
-                    alt={product.name}
-                    className="h-full object-contain group-hover:scale-110 transition-transform duration-700"
-                    referrerPolicy="no-referrer"
-                  />
-                  <div className="absolute top-2 right-2 sm:top-4 sm:right-4 px-2 py-0.5 sm:px-3 sm:py-1 bg-accent/10 backdrop-blur-md border border-accent/20 text-accent text-[8px] sm:text-xs font-black uppercase rounded-full">
-                    {product.category}
-                  </div>
-                </div>
-                <div className="p-3 sm:p-8 flex-grow flex flex-col justify-between">
-                  <div className="space-y-1 sm:space-y-2">
-                    <h3 className="text-xs sm:text-xl font-black uppercase tracking-tight text-text-primary leading-tight group-hover:text-accent transition-colors line-clamp-2">
-                      {product.name}
-                    </h3>
-                    <div className="flex flex-wrap items-center gap-1 sm:gap-2">
-                      {product.flavorProfile?.slice(0, 2).map(flavor => (
-                        <span key={flavor} className="text-[8px] sm:text-xs font-bold uppercase tracking-widest text-text-secondary border border-border-custom px-1 py-0.5 sm:px-2 rounded-full">
-                          {flavor}
-                        </span>
-                      ))}
+          
+          {featuredProducts.length === 0 ? (
+            <div className="bg-bg-secondary border border-border-custom rounded-3xl p-12 text-center">
+              <p className="text-text-secondary font-bold uppercase tracking-widest text-sm">
+                No products available in the Fridge yet. Add products from the Admin Dashboard.
+              </p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
+              {featuredProducts.map((product, idx) => (
+                <motion.div
+                  key={product.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: idx * 0.1 }}
+                  className="group bg-bg-secondary border border-border-custom rounded-2xl sm:rounded-3xl overflow-hidden hover:border-accent/50 transition-all duration-500 shadow-lg flex flex-col h-[320px] sm:h-[500px]"
+                >
+                  <div className="relative h-3/5 overflow-hidden bg-bg-primary">
+                    <img 
+                      src={product.image} 
+                      alt={product.name} 
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement;
+                        if (!target.src.includes('photo-1551024709')) {
+                          target.src = 'https://images.unsplash.com/photo-1551024709-8f23befc6f87?auto=format&fit=crop&w=600&q=80';
+                        }
+                      }}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                      referrerPolicy="no-referrer"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent pointer-events-none" />
+                    <div className="absolute top-2 right-2 sm:top-4 sm:right-4 px-2 py-0.5 sm:px-3 sm:py-1 bg-black/60 backdrop-blur-md border border-white/15 text-accent text-[8px] sm:text-xs font-black uppercase rounded-full">
+                      {product.category}
                     </div>
                   </div>
-
-                  <div className="pt-3 sm:pt-6 border-t border-border-custom flex items-center justify-between">
-                    <div className="text-sm sm:text-2xl font-black text-accent">
-                      ₦{product.price.toLocaleString()}
+                  <div className="p-3 sm:p-6 flex-grow flex flex-col justify-between">
+                    <div className="space-y-1 sm:space-y-2">
+                      <h3 className="text-xs sm:text-xl font-black uppercase tracking-tight text-text-primary leading-tight group-hover:text-accent transition-colors line-clamp-2">
+                        {product.name}
+                      </h3>
+                      <div className="flex flex-wrap items-center gap-1 sm:gap-2">
+                        {product.flavorProfile?.slice(0, 2).map(flavor => (
+                          <span key={flavor} className="text-[8px] sm:text-xs font-bold uppercase tracking-widest text-text-secondary border border-border-custom px-1 py-0.5 sm:px-2 rounded-full">
+                            {flavor}
+                          </span>
+                        ))}
+                      </div>
                     </div>
-                    <Link
-                      to="/products"
-                      className="p-1.5 sm:p-3 bg-bg-primary border border-border-custom hover:border-accent hover:text-accent rounded-full transition-all"
-                    >
-                      <ArrowRight className="w-3 h-3 sm:w-[18px] sm:h-[18px]" />
-                    </Link>
+                    
+                    <div className="pt-3 sm:pt-4 border-t border-border-custom flex items-center justify-between gap-2">
+                      <div className="text-sm sm:text-2xl font-black text-accent">
+                        ₦{product.price.toLocaleString()}
+                      </div>
+                      <div className="flex items-center gap-1.5 sm:gap-2">
+                        <button
+                          type="button"
+                          onClick={() => handleFeaturedAdd(product)}
+                          title="Add to Cart"
+                          className="btn-cta p-1.5 sm:p-3 rounded-full transition-all cursor-pointer flex items-center justify-center shadow-md"
+                        >
+                          {addedId === product.id ? (
+                            <Check className="w-3.5 h-3.5 sm:w-[18px] sm:h-[18px]" />
+                          ) : (
+                            <ShoppingCart className="w-3.5 h-3.5 sm:w-[18px] sm:h-[18px]" />
+                          )}
+                        </button>
+                        <Link 
+                          to="/products"
+                          title="View in Fridge"
+                          className="p-1.5 sm:p-3 bg-bg-primary border border-border-custom hover:border-accent hover:text-accent rounded-full transition-all"
+                        >
+                          <ArrowRight className="w-3.5 h-3.5 sm:w-[18px] sm:h-[18px]" />
+                        </Link>
+                      </div>
+                    </div>
                   </div>
-                </div>
-              </motion.div>
-            ))}
-          </div>
+                </motion.div>
+              ))}
+            </div>
+          )}
         </div>
       </section>
 
@@ -201,9 +227,9 @@ export default function Home() {
             </div>
           </div>
           <div className="relative h-[60vh] lg:h-auto overflow-hidden">
-            <img
-              src="https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?auto=format&fit=crop&w=1000&q=80"
-              alt="People celebrating"
+            <img 
+              src="https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?auto=format&fit=crop&w=1000&q=80" 
+              alt="People celebrating" 
               className="w-full h-full object-cover brightness-90 dark:brightness-75 hover:scale-105 transition-transform duration-1000"
               referrerPolicy="no-referrer"
             />
@@ -217,9 +243,9 @@ export default function Home() {
           <div className="relative h-[60vh] lg:h-auto overflow-hidden order-2 lg:order-1 p-8 lg:p-24 flex items-center justify-center">
             <div className="relative w-full h-full rounded-3xl overflow-hidden shadow-2xl">
               <div className="absolute inset-0 bg-gradient-to-t from-bg-primary via-transparent to-transparent z-10 transition-colors duration-300" />
-              <img
-                src="https://images.unsplash.com/photo-1506377247377-2a5b3b417ebb?auto=format&fit=crop&w=1000&q=80"
-                alt="High-end Wine Cellar"
+              <img 
+                src="https://images.unsplash.com/photo-1506377247377-2a5b3b417ebb?auto=format&fit=crop&w=1000&q=80" 
+                alt="High-end Wine Cellar" 
                 className="w-full h-full object-cover brightness-75 dark:brightness-50 hover:brightness-90 dark:hover:brightness-75 transition-all duration-700"
                 referrerPolicy="no-referrer"
               />
@@ -261,19 +287,19 @@ export default function Home() {
               <span className="text-accent">Snacks</span>
             </h2>
             <p className="text-lg sm:text-xl md:text-2xl text-text-secondary font-light leading-relaxed">
-              Elevate your experience with our selection of premium snacks. From roasted nuts to savory crisps, find the perfect companion for your beverage.
+              Elevate your experience with our selection of premium snacks. From roasted nuts to artisanal charcuterie and savory crisps, find the perfect companion for your beverage.
             </p>
             <div className="pt-8">
-              <Link to="/products?category=Snacks" className="inline-block px-6 py-3 md:px-12 md:py-5 bg-text-primary text-bg-primary hover:bg-accent hover:text-white text-xs md:text-sm font-black uppercase tracking-widest transition-all rounded-full shadow-2xl">
-                Shop Snacks
+              <Link to="/products?category=Snacks" className="btn-cta inline-block px-6 py-3 md:px-12 md:py-5 text-xs md:text-sm font-black uppercase tracking-widest rounded-full shadow-2xl">
+                <span>Shop Snacks</span>
               </Link>
             </div>
           </div>
           <div className="relative h-[60vh] lg:h-auto overflow-hidden">
-            <img
-              src="https://images.unsplash.com/photo-1536584754829-12214d404f52?auto=format&fit=crop&w=1000&q=80"
-              alt="Gourmet Peanuts and Cashews"
-              className="w-full h-full object-cover brightness-90 dark:brightness-50 transition-all duration-300"
+            <img 
+              src="https://images.unsplash.com/photo-1541592106381-b31e9677c0e5?auto=format&fit=crop&w=1200&q=80" 
+              alt="Gourmet Bar Snacks and Artisanal Bites" 
+              className="w-full h-full object-cover brightness-95 dark:brightness-75 hover:scale-105 transition-all duration-700"
               referrerPolicy="no-referrer"
             />
           </div>
@@ -303,9 +329,9 @@ export default function Home() {
 
       {/* Section 7: Final CTA - Fridge Style */}
       <section className="relative min-h-screen px-8 bg-black text-white flex flex-col items-center justify-center text-center border-t border-border-custom overflow-hidden transition-colors duration-300">
-        <img
-          src="https://images.unsplash.com/photo-1601598851547-4302969d0614?auto=format&fit=crop&w=1920&q=80"
-          alt="Fridge full of drinks"
+        <img 
+          src="https://images.unsplash.com/photo-1601598851547-4302969d0614?auto=format&fit=crop&w=1920&q=80" 
+          alt="Fridge full of drinks" 
           className="absolute inset-0 w-full h-full object-cover opacity-40"
           referrerPolicy="no-referrer"
         />
@@ -316,8 +342,8 @@ export default function Home() {
         <p className="text-lg sm:text-xl text-white/80 font-light max-w-2xl mb-12 relative z-10 drop-shadow-md">
           Step into our ultra-modern, temperature-controlled glass cooler. Browse our full collection of premium spirits, craft sodas, and curated snacks.
         </p>
-        <Link to="/products" onClick={() => window.scrollTo(0, 0)} className="px-6 py-3 md:px-16 md:py-6 btn-cta text-white dark:text-black hover:scale-105 hover:brightness-110 active:scale-95 font-black uppercase tracking-widest transition-all shadow-2xl shadow-accent/20 relative z-10 rounded-full text-xs md:text-lg">
-          View Full Collection
+        <Link to="/products" onClick={() => window.scrollTo(0, 0)} className="btn-cta px-6 py-3 md:px-16 md:py-6 font-black uppercase tracking-widest shadow-2xl shadow-accent/20 relative z-10 rounded-full text-xs md:text-lg">
+          <span>View Full Collection</span>
         </Link>
       </section>
     </div>

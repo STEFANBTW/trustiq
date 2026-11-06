@@ -103,9 +103,9 @@ export default function Signup() {
 
           <button 
             type="submit"
-            className="w-full py-5 btn-cta text-white dark:text-black font-black uppercase tracking-widest rounded-2xl hover:scale-105 hover:brightness-110 active:scale-95 transition-all shadow-xl shadow-accent/20 flex items-center justify-center gap-3 group"
+            className="btn-cta w-full py-5 font-black uppercase tracking-widest rounded-2xl shadow-xl shadow-accent/20 flex items-center justify-center gap-3 group"
           >
-            Create Account <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
+            <span>Create Account</span> <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
           </button>
         </form>
 

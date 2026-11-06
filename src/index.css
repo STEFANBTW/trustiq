@@ -124,70 +124,121 @@
   .item-glow-neon {
     filter: drop-shadow(0 0 20px var(--accent-glow));
   }
+}
+
+/* ==========================================================================
+   Project Change: Button Animation Overhaul (Liquid Fill)
+   ========================================================================== */
+
+.btn-cta {
+  position: relative;
+  overflow: hidden;
+  background-color: transparent !important; /* Handled by ::after pseudo-element */
+  border: none !important;
+  z-index: 1;
   
-  .btn-cta {
-    position: relative;
-    overflow: hidden;
-    /* Remove background-color, move to ::after */
-    background-color: transparent;
-    border: none !important;
-    z-index: 1;
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-    
-    /* Standard Color Transition */
-    color: black !important;
-    /* Transition matches the wave fill duration */
-    transition: color 1s ease-in-out, transform 0.3s ease, box-shadow 0.3s ease;
-  }
+  /* Initial Text Color & Transition */
+  color: #0c0a09 !important;
+  transition: color 0.65s cubic-bezier(0.16, 1, 0.3, 1), transform 0.3s ease, box-shadow 0.3s ease;
+}
 
-  /* Ensure text/icons are part of the parent context */
-  .btn-cta > * {
-    position: static;
-    z-index: auto;
-  }
+/* Ensure children elements sit above background pseudo-elements but allow hover */
+.btn-cta > * {
+  position: relative;
+  z-index: 1;
+  pointer-events: none; /* Allows hover to register on parent .btn-cta */
+}
 
-  /* The Orange Background (Base) */
-  .btn-cta::after {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: var(--accent);
-    z-index: -2; /* Behind everything */
-  }
+/* Base Background Layer (Orange) */
+.btn-cta::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: var(--accent);
+  z-index: -2; /* Placed behind everything */
+}
 
-  /* The Rising Water Level (Dark Amber) */
-  .btn-cta::before {
-    content: '';
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    width: 100%;
-    height: 0%; /* Start empty */
-    background-color: #78350f; /* amber-900 (Dark Amber) */
-    transition: height 1s ease-in-out; /* Smooth 1s fill */
-    z-index: -1; /* Between Orange bg and Text */
-  }
+/* Rising Liquid Layer (Dark Amber) */
+.btn-cta::before {
+  content: '';
+  position: absolute;
+  bottom: 0; /* Anchored to bottom */
+  left: 0;
+  width: 100%;
+  height: 0%; /* Invisible initially */
+  background-color: #78350f; /* amber-900 dark brown-amber liquid */
+  transition: height 0.65s cubic-bezier(0.16, 1, 0.3, 1);
+  z-index: -1; /* Placed between text and orange base */
+}
 
-  /* Hover State - Fill the Cup */
-  .btn-cta:hover::before {
-    height: 100%; /* Fill to top */
-  }
+/* Hover Interactions */
+.btn-cta:hover::before {
+  height: 100%; /* Fill up effect */
+}
 
-  /* Hover State - Slide Text Color */
-  .btn-cta:hover {
-    color: white !important;
-    transform: scale(1.05);
-    box-shadow: 0 0 25px var(--accent-glow);
-  }
+.btn-cta:hover {
+  color: #ffffff !important; /* Text turns white for contrast */
+  transform: translateY(-1px) scale(1.02);
+  box-shadow: 0 10px 25px -5px var(--accent-glow);
+}
 
-  /* Dark mode adjustments */
-  .dark .btn-cta {
-    /* No gradient needed */
-  }
-  .dark .btn-cta > * {
-    /* No mix-blend-mode */
-  }
+.btn-cta:active {
+  transform: translateY(0) scale(0.98);
+}
+
+/* Secondary / Outline Button with Dark Amber Liquid Fill */
+.btn-cta-secondary {
+  position: relative;
+  overflow: hidden;
+  background-color: transparent !important;
+  z-index: 1;
+  color: var(--text-primary) !important;
+  transition: color 0.65s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.4s ease, transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.btn-cta-secondary > * {
+  position: relative;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.btn-cta-secondary::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(255, 255, 255, 0.06);
+  z-index: -2;
+}
+
+.btn-cta-secondary::before {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 0%;
+  background-color: #78350f; /* amber-900 dark brown-amber liquid */
+  transition: height 0.65s cubic-bezier(0.16, 1, 0.3, 1);
+  z-index: -1;
+}
+
+.btn-cta-secondary:hover::before {
+  height: 100%;
+}
+
+.btn-cta-secondary:hover {
+  color: #ffffff !important;
+  border-color: #92400e !important;
+  transform: translateY(-1px) scale(1.02);
+  box-shadow: 0 8px 20px -4px rgba(120, 53, 15, 0.45);
+}
+
+.btn-cta-secondary:active {
+  transform: translateY(0) scale(0.98);
 }

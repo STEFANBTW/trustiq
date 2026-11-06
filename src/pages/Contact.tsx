@@ -120,8 +120,8 @@ export default function Contact() {
                   <label className="text-[10px] font-black uppercase tracking-widest text-text-secondary">Your Inquiry</label>
                   <textarea rows={4} className="w-full bg-transparent border-b border-border-custom py-3 sm:py-4 focus:border-accent outline-none transition-colors text-text-primary resize-none"></textarea>
                 </div>
-                <button className="w-full py-4 sm:py-6 btn-cta text-white dark:text-black font-black uppercase tracking-[0.4em] hover:scale-105 hover:brightness-110 active:scale-95 transition-all flex items-center justify-center gap-4 text-sm sm:text-base rounded-xl">
-                  Transmit <Send size={20} />
+                <button className="btn-cta w-full py-4 sm:py-6 font-black uppercase tracking-[0.4em] flex items-center justify-center gap-4 text-sm sm:text-base rounded-xl">
+                  <span>Transmit</span> <Send size={20} />
                 </button>
               </form>
             </div>
@@ -132,7 +132,7 @@ export default function Contact() {
               <MessageSquare className="text-accent mb-6" size={32} />
               <h4 className="text-xl font-black uppercase italic tracking-tighter mb-4 text-text-primary">Live Chat</h4>
               <p className="text-text-secondary font-light text-sm mb-6">Our experts are online during business hours to help you find the perfect bottle.</p>
-              <button className="w-full py-4 border border-border-custom text-text-primary font-black uppercase tracking-widest text-[10px] sm:text-xs hover:bg-accent hover:text-white dark:hover:text-black hover:border-accent transition-all rounded-xl">Start Chat</button>
+              <button className="btn-cta-secondary w-full py-4 border border-border-custom font-black uppercase tracking-widest text-[10px] sm:text-xs rounded-xl"><span>Start Chat</span></button>
             </div>
             <div className="bg-bg-secondary/80 backdrop-blur-xl p-8 sm:p-12 border border-border-custom rounded-3xl shadow-xl transition-colors duration-300">
               <ShieldCheck className="text-accent mb-6" size={32} />

@@ -77,15 +77,15 @@ export default function Dashboard() {
       </aside>
 
       {/* Main Content */}
-      <main className="flex-grow p-4 sm:p-6 md:p-12 max-w-7xl mx-auto w-full pb-24 lg:pb-12">
+      <main className="flex-grow p-4 sm:p-6 md:p-8 max-w-7xl mx-auto w-full pb-20 lg:pb-8">
         {/* Header */}
-        <header className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8 lg:mb-12">
+        <header className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 lg:mb-8">
           <div className="flex items-center justify-between w-full md:w-auto">
-            <div className="space-y-1 lg:space-y-2">
-              <h1 className="text-3xl sm:text-4xl md:text-6xl font-black uppercase italic tracking-tighter text-text-primary">
+            <div className="space-y-0.5 lg:space-y-1">
+              <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold uppercase italic tracking-tighter text-text-primary">
                 Account <span className="text-accent">Portal</span>
               </h1>
-              <p className="text-xs sm:text-sm text-text-secondary font-medium">Welcome back.</p>
+              <p className="text-xs text-text-secondary font-medium">Welcome back.</p>
             </div>
             {/* Mobile Logout */}
             <button 
@@ -117,26 +117,26 @@ export default function Dashboard() {
         </header>
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6 mb-12">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-8">
           {stats.map((stat, idx) => (
             <motion.div
               key={stat.label}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: idx * 0.1 }}
-              className="bg-bg-secondary border border-border-custom rounded-2xl sm:rounded-3xl p-4 sm:p-8 shadow-lg hover:border-accent/30 transition-all group"
+              className="bg-bg-secondary border border-border-custom rounded-xl p-4 shadow-md hover:border-accent/30 transition-all group"
             >
-              <div className="flex justify-between items-start mb-2 sm:mb-4">
-                <div className="p-2 sm:p-3 bg-bg-primary rounded-xl sm:rounded-2xl text-accent group-hover:scale-110 transition-transform">
-                  {React.cloneElement(stat.icon as React.ReactElement, { className: "w-4 h-4 sm:w-5 sm:h-5" })}
+              <div className="flex justify-between items-start mb-2">
+                <div className="p-2 bg-bg-primary rounded-lg text-accent group-hover:scale-110 transition-transform">
+                  {React.cloneElement(stat.icon as React.ReactElement<any>, { className: "w-4 h-4" })}
                 </div>
-                <span className={`text-[8px] sm:text-xs font-black uppercase tracking-widest ${stat.color}`}>
+                <span className={`text-[8px] font-bold uppercase tracking-widest ${stat.color}`}>
                   {stat.change}
                 </span>
               </div>
-              <div className="space-y-0.5 sm:space-y-1">
-                <div className="text-xl sm:text-3xl font-black text-text-primary">{stat.value}</div>
-                <div className="text-[8px] sm:text-xs font-black uppercase tracking-widest text-text-secondary">{stat.label}</div>
+              <div className="space-y-0.5">
+                <div className="text-lg font-bold text-text-primary">{stat.value}</div>
+                <div className="text-[8px] font-bold uppercase tracking-widest text-text-secondary">{stat.label}</div>
               </div>
             </motion.div>
           ))}
