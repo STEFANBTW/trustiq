@@ -1,0 +1,284 @@
+12:30:10.956 Running build in Washington, D.C., USA (East) – iad1
+12:30:10.957 Build machine configuration: 2 cores, 8 GB
+12:30:11.130 Cloning github.com/STEFANBTW/trustiq (Branch: main, Commit: fab3325)
+12:30:11.131 Previous build caches not available.
+12:30:11.719 Cloning completed: 589.000ms
+12:30:12.248 Running "vercel build"
+12:30:12.259 Vercel CLI 65.11.0
+12:30:12.999 Installing dependencies...
+12:30:13.712 npm warn Unknown env config "cache-dir". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.
+12:30:13.856 npm warn EBADENGINE Unsupported engine {
+12:30:13.857 npm warn EBADENGINE   package: 'better-sqlite3@12.6.2',
+12:30:13.857 npm warn EBADENGINE   required: { node: '20.x || 22.x || 23.x || 24.x || 25.x' },
+12:30:13.857 npm warn EBADENGINE   current: { node: 'v26.13.0', npm: '11.20.0' }
+12:30:13.857 npm warn EBADENGINE }
+12:30:15.663 npm warn deprecated prebuild-install@7.1.3: No longer maintained. Please contact the author of the relevant native addon; alternatives are available.
+12:30:16.707 npm warn deprecated node-domexception@1.0.0: Use your platform's native DOMException instead
+12:30:17.302 npm warn deprecated glob@10.5.0: Old versions of glob are not supported, and contain widely publicized security vulnerabilities, which have been fixed in the current version. Please update. Support for old versions may be purchased (at exorbitant rates) by contacting i@izs.me
+12:31:52.062 npm error code 1
+12:31:52.063 npm error path /vercel/path0/node_modules/better-sqlite3
+12:31:52.064 npm error command failed
+12:31:52.064 npm error command sh -c prebuild-install || node-gyp rebuild --release
+12:31:52.064 npm error make: Entering directory '/vercel/path0/node_modules/better-sqlite3/build'
+12:31:52.065 npm error   TOUCH 4292fa9a667d77b27488aa109b010a85bce8e4e7a1c7aa0370cea902395c3866.intermediate
+12:31:52.065 npm error   ACTION deps_sqlite3_gyp_locate_sqlite3_target_copy_builtin_sqlite3 4292fa9a667d77b27488aa109b010a85bce8e4e7a1c7aa0370cea902395c3866.intermediate
+12:31:52.066 npm error   TOUCH Release/obj.target/deps/locate_sqlite3.stamp
+12:31:52.066 npm error   CC(target) Release/obj.target/sqlite3/gen/sqlite3/sqlite3.o
+12:31:52.066 npm error rm -f Release/obj.target/deps/sqlite3.a Release/obj.target/deps/sqlite3.a.ar-file-list; mkdir -p `dirname Release/obj.target/deps/sqlite3.a`
+12:31:52.067 npm error ar crs Release/obj.target/deps/sqlite3.a @Release/obj.target/deps/sqlite3.a.ar-file-list
+12:31:52.067 npm error   COPY Release/sqlite3.a
+12:31:52.068 npm error   CXX(target) Release/obj.target/better_sqlite3/src/better_sqlite3.o
+12:31:52.068 npm error rm 4292fa9a667d77b27488aa109b010a85bce8e4e7a1c7aa0370cea902395c3866.intermediate
+12:31:52.068 npm error make: Leaving directory '/vercel/path0/node_modules/better-sqlite3/build'
+12:31:52.089 npm error prebuild-install warn install No prebuilt binaries found (target=26.13.0 runtime=node arch=x64 libc= platform=linux)
+12:31:52.091 npm error gyp info it worked if it ends with ok
+12:31:52.091 npm error gyp info using node-gyp@12.4.0
+12:31:52.092 npm error gyp info using node@26.13.0 | linux | x64
+12:31:52.092 npm error gyp info find Python using Python version 3.12.15 found at "/uv/python/bin/python3"
+12:31:52.092 npm error gyp http GET https://nodejs.org/download/release/v26.13.0/node-v26.13.0-headers.tar.gz
+12:31:52.092 npm error gyp http 200 https://nodejs.org/download/release/v26.13.0/node-v26.13.0-headers.tar.gz
+12:31:52.092 npm error gyp http GET https://nodejs.org/download/release/v26.13.0/SHASUMS256.txt
+12:31:52.092 npm error gyp http 200 https://nodejs.org/download/release/v26.13.0/SHASUMS256.txt
+12:31:52.092 npm error gyp info spawn /uv/python/bin/python3
+12:31:52.093 npm error gyp info spawn args [
+12:31:52.093 npm error gyp info spawn args '/node26/lib/node_modules/npm/node_modules/node-gyp/gyp/gyp_main.py',
+12:31:52.093 npm error gyp info spawn args 'binding.gyp',
+12:31:52.093 npm error gyp info spawn args '-f',
+12:31:52.093 npm error gyp info spawn args 'make',
+12:31:52.093 npm error gyp info spawn args '-I',
+12:31:52.093 npm error gyp info spawn args '/vercel/path0/node_modules/better-sqlite3/build/config.gypi',
+12:31:52.093 npm error gyp info spawn args '-I',
+12:31:52.094 npm error gyp info spawn args '/node26/lib/node_modules/npm/node_modules/node-gyp/addon.gypi',
+12:31:52.094 npm error gyp info spawn args '-I',
+12:31:52.094 npm error gyp info spawn args '/vercel/.cache/node-gyp/26.13.0/include/node/common.gypi',
+12:31:52.094 npm error gyp info spawn args '-Dlibrary=shared_library',
+12:31:52.094 npm error gyp info spawn args '-Dvisibility=default',
+12:31:52.094 npm error gyp info spawn args '-Dnode_root_dir=/vercel/.cache/node-gyp/26.13.0',
+12:31:52.094 npm error gyp info spawn args '-Dnode_gyp_dir=/node26/lib/node_modules/npm/node_modules/node-gyp',
+12:31:52.094 npm error gyp info spawn args '-Dnode_lib_file=/vercel/.cache/node-gyp/26.13.0/<(target_arch)/node.lib',
+12:31:52.094 npm error gyp info spawn args '-Dmodule_root_dir=/vercel/path0/node_modules/better-sqlite3',
+12:31:52.095 npm error gyp info spawn args '-Dnode_engine=v8',
+12:31:52.095 npm error gyp info spawn args '--depth=.',
+12:31:52.095 npm error gyp info spawn args '--no-parallel',
+12:31:52.095 npm error gyp info spawn args '--generator-output',
+12:31:52.095 npm error gyp info spawn args 'build',
+12:31:52.095 npm error gyp info spawn args '-Goutput_dir=.'
+12:31:52.095 npm error gyp info spawn args ]
+12:31:52.095 npm error gyp info spawn make
+12:31:52.095 npm error gyp info spawn args [ 'BUILDTYPE=Release', '-C', 'build' ]
+12:31:52.095 npm error In file included from ../src/better_sqlite3.cpp:11:
+12:31:52.095 npm error /vercel/.cache/node-gyp/26.13.0/include/node/node.h:1617:26: warning: 'maybe_unused' attribute ignored [-Wattributes]
+12:31:52.095 npm error  1617 |   [[maybe_unused]] void* reserved_;
+12:31:52.095 npm error       |                          ^~~~~~~~~
+12:31:52.096 npm error In file included from ../src/better_sqlite3.cpp:21:
+12:31:52.096 npm error ../src/addon.cpp: In static member function 'static void Addon::JS_setErrorConstructor(const v8::FunctionCallbackInfo<v8::Value>&)':
+12:31:52.096 npm error ../src/util/macros.cpp:17:76: warning: 'void* v8::External::Value() const' is deprecated: Use the version with the type tag. [-Wdeprecated-declarations]
+12:31:52.096 npm error    17 | #define OnlyAddon static_cast<Addon*>(info.Data().As<v8::External>()->Value())
+12:31:52.096 npm error       |                                       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~
+12:31:52.096 npm error ../src/addon.cpp:36:17: note: in expansion of macro 'OnlyAddon'
+12:31:52.096 npm error    36 |                 OnlyAddon->SqliteError.Reset(OnlyIsolate, SqliteError);
+12:31:52.096 npm error       |                 ^~~~~~~~~
+12:31:52.096 npm error In file included from /vercel/.cache/node-gyp/26.13.0/include/node/v8.h:32,
+12:31:52.097 npm error                  from /vercel/.cache/node-gyp/26.13.0/include/node/node.h:74,
+12:31:52.097 npm error                  from ../src/better_sqlite3.cpp:11:
+12:31:52.097 npm error /vercel/.cache/node-gyp/26.13.0/include/node/v8-external.h:55:9: note: declared here
+12:31:52.097 npm error    55 |   void* Value() const { return Value(kExternalPointerTypeTagDefault); }
+12:31:52.097 npm error       |         ^~~~~
+12:31:52.098 npm error In file included from ../src/better_sqlite3.cpp:21:
+12:31:52.098 npm error ../src/objects/backup.cpp: In static member function 'static void Backup::JS_new(const v8::FunctionCallbackInfo<v8::Value>&)':
+12:31:52.098 npm error ../src/util/macros.cpp:17:76: warning: 'void* v8::External::Value() const' is deprecated: Use the version with the type tag. [-Wdeprecated-declarations]
+12:31:52.098 npm error    17 | #define OnlyAddon static_cast<Addon*>(info.Data().As<v8::External>()->Value())
+12:31:52.098 npm error       |                                       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~
+12:31:52.098 npm error ../src/util/macros.cpp:20:33: note: in expansion of macro 'OnlyAddon'
+12:31:52.098 npm error    20 | #define UseAddon Addon* addon = OnlyAddon
+12:31:52.098 npm error       |                                 ^~~~~~~~~
+12:31:52.099 npm error ../src/objects/backup.cpp:46:9: note: in expansion of macro 'UseAddon'
+12:31:52.099 npm error    46 |         UseAddon;
+12:31:52.099 npm error       |         ^~~~~~~~
+12:31:52.099 npm error In file included from /vercel/.cache/node-gyp/26.13.0/include/node/v8.h:32,
+12:31:52.100 npm error                  from /vercel/.cache/node-gyp/26.13.0/include/node/node.h:74,
+12:31:52.100 npm error                  from ../src/better_sqlite3.cpp:11:
+12:31:52.100 npm error /vercel/.cache/node-gyp/26.13.0/include/node/v8-external.h:55:9: note: declared here
+12:31:52.100 npm error    55 |   void* Value() const { return Value(kExternalPointerTypeTagDefault); }
+12:31:52.100 npm error       |         ^~~~~
+12:31:52.100 npm error In file included from ../src/better_sqlite3.cpp:21:
+12:31:52.100 npm error ../src/objects/statement.cpp: In static member function 'static void Statement::JS_new(const v8::FunctionCallbackInfo<v8::Value>&)':
+12:31:52.100 npm error ../src/util/macros.cpp:17:76: warning: 'void* v8::External::Value() const' is deprecated: Use the version with the type tag. [-Wdeprecated-declarations]
+12:31:52.101 npm error    17 | #define OnlyAddon static_cast<Addon*>(info.Data().As<v8::External>()->Value())
+12:31:52.101 npm error       |                                       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~
+12:31:52.101 npm error ../src/util/macros.cpp:20:33: note: in expansion of macro 'OnlyAddon'
+12:31:52.101 npm error    20 | #define UseAddon Addon* addon = OnlyAddon
+12:31:52.101 npm error       |                                 ^~~~~~~~~
+12:31:52.101 npm error ../src/objects/statement.cpp:72:9: note: in expansion of macro 'UseAddon'
+12:31:52.101 npm error    72 |         UseAddon;
+12:31:52.101 npm error       |         ^~~~~~~~
+12:31:52.101 npm error In file included from /vercel/.cache/node-gyp/26.13.0/include/node/v8.h:32,
+12:31:52.101 npm error                  from /vercel/.cache/node-gyp/26.13.0/include/node/node.h:74,
+12:31:52.101 npm error                  from ../src/better_sqlite3.cpp:11:
+12:31:52.101 npm error /vercel/.cache/node-gyp/26.13.0/include/node/v8-external.h:55:9: note: declared here
+12:31:52.101 npm error    55 |   void* Value() const { return Value(kExternalPointerTypeTagDefault); }
+12:31:52.102 npm error       |         ^~~~~
+12:31:52.102 npm error In file included from ../src/better_sqlite3.cpp:21:
+12:31:52.102 npm error ../src/objects/statement.cpp: In static member function 'static void Statement::JS_iterate(const v8::FunctionCallbackInfo<v8::Value>&)':
+12:31:52.102 npm error ../src/util/macros.cpp:17:76: warning: 'void* v8::External::Value() const' is deprecated: Use the version with the type tag. [-Wdeprecated-declarations]
+12:31:52.102 npm error    17 | #define OnlyAddon static_cast<Addon*>(info.Data().As<v8::External>()->Value())
+12:31:52.102 npm error       |                                       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~
+12:31:52.102 npm error ../src/util/macros.cpp:20:33: note: in expansion of macro 'OnlyAddon'
+12:31:52.102 npm error    20 | #define UseAddon Addon* addon = OnlyAddon
+12:31:52.102 npm error       |                                 ^~~~~~~~~
+12:31:52.102 npm error ../src/objects/statement.cpp:229:9: note: in expansion of macro 'UseAddon'
+12:31:52.103 npm error   229 |         UseAddon;
+12:31:52.103 npm error       |         ^~~~~~~~
+12:31:52.103 npm error In file included from /vercel/.cache/node-gyp/26.13.0/include/node/v8.h:32,
+12:31:52.103 npm error                  from /vercel/.cache/node-gyp/26.13.0/include/node/node.h:74,
+12:31:52.104 npm error                  from ../src/better_sqlite3.cpp:11:
+12:31:52.104 npm error /vercel/.cache/node-gyp/26.13.0/include/node/v8-external.h:55:9: note: declared here
+12:31:52.104 npm error    55 |   void* Value() const { return Value(kExternalPointerTypeTagDefault); }
+12:31:52.104 npm error       |         ^~~~~
+12:31:52.104 npm error In file included from ../src/better_sqlite3.cpp:44:
+12:31:52.104 npm error ../src/objects/statement.cpp: In static member function 'static void Statement::JS_busy(v8::Local<v8::Name>, const v8::PropertyCallbackInfo<v8::Value>&)':
+12:31:52.104 npm error ../src/objects/statement.cpp:381:50: error: 'const class v8::PropertyCallbackInfo<v8::Value>' has no member named 'This'
+12:31:52.104 npm error   381 |         Statement* stmt = Unwrap<Statement>(info.This());
+12:31:52.104 npm error       |                                                  ^~~~
+12:31:52.104 npm error In file included from ../src/better_sqlite3.cpp:21:
+12:31:52.105 npm error ../src/objects/database.cpp: In static member function 'static void Database::JS_new(const v8::FunctionCallbackInfo<v8::Value>&)':
+12:31:52.105 npm error ../src/util/macros.cpp:17:76: warning: 'void* v8::External::Value() const' is deprecated: Use the version with the type tag. [-Wdeprecated-declarations]
+12:31:52.105 npm error    17 | #define OnlyAddon static_cast<Addon*>(info.Data().As<v8::External>()->Value())
+12:31:52.105 npm error       |                                       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~
+12:31:52.105 npm error ../src/util/macros.cpp:20:33: note: in expansion of macro 'OnlyAddon'
+12:31:52.105 npm error    20 | #define UseAddon Addon* addon = OnlyAddon
+12:31:52.105 npm error       |                                 ^~~~~~~~~
+12:31:52.105 npm error ../src/objects/database.cpp:155:9: note: in expansion of macro 'UseAddon'
+12:31:52.105 npm error   155 |         UseAddon;
+12:31:52.105 npm error       |         ^~~~~~~~
+12:31:52.105 npm error In file included from /vercel/.cache/node-gyp/26.13.0/include/node/v8.h:32,
+12:31:52.105 npm error                  from /vercel/.cache/node-gyp/26.13.0/include/node/node.h:74,
+12:31:52.105 npm error                  from ../src/better_sqlite3.cpp:11:
+12:31:52.105 npm error /vercel/.cache/node-gyp/26.13.0/include/node/v8-external.h:55:9: note: declared here
+12:31:52.105 npm error    55 |   void* Value() const { return Value(kExternalPointerTypeTagDefault); }
+12:31:52.105 npm error       |         ^~~~~
+12:31:52.105 npm error In file included from ../src/better_sqlite3.cpp:21:
+12:31:52.105 npm error ../src/objects/database.cpp: In static member function 'static void Database::JS_prepare(const v8::FunctionCallbackInfo<v8::Value>&)':
+12:31:52.105 npm error ../src/util/macros.cpp:17:76: warning: 'void* v8::External::Value() const' is deprecated: Use the version with the type tag. [-Wdeprecated-declarations]
+12:31:52.105 npm error    17 | #define OnlyAddon static_cast<Addon*>(info.Data().As<v8::External>()->Value())
+12:31:52.105 npm error       |                                       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~
+12:31:52.105 npm error ../src/util/macros.cpp:20:33: note: in expansion of macro 'OnlyAddon'
+12:31:52.105 npm error    20 | #define UseAddon Addon* addon = OnlyAddon
+12:31:52.105 npm error       |                                 ^~~~~~~~~
+12:31:52.105 npm error ../src/objects/database.cpp:203:9: note: in expansion of macro 'UseAddon'
+12:31:52.105 npm error   203 |         UseAddon;
+12:31:52.105 npm error       |         ^~~~~~~~
+12:31:52.105 npm error In file included from /vercel/.cache/node-gyp/26.13.0/include/node/v8.h:32,
+12:31:52.105 npm error                  from /vercel/.cache/node-gyp/26.13.0/include/node/node.h:74,
+12:31:52.105 npm error                  from ../src/better_sqlite3.cpp:11:
+12:31:52.106 npm error /vercel/.cache/node-gyp/26.13.0/include/node/v8-external.h:55:9: note: declared here
+12:31:52.106 npm error    55 |   void* Value() const { return Value(kExternalPointerTypeTagDefault); }
+12:31:52.106 npm error       |         ^~~~~
+12:31:52.106 npm error In file included from ../src/better_sqlite3.cpp:21:
+12:31:52.108 npm error ../src/objects/database.cpp: In static member function 'static void Database::JS_backup(const v8::FunctionCallbackInfo<v8::Value>&)':
+12:31:52.108 npm error ../src/util/macros.cpp:17:76: warning: 'void* v8::External::Value() const' is deprecated: Use the version with the type tag. [-Wdeprecated-declarations]
+12:31:52.108 npm error    17 | #define OnlyAddon static_cast<Addon*>(info.Data().As<v8::External>()->Value())
+12:31:52.108 npm error       |                                       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~
+12:31:52.109 npm error ../src/util/macros.cpp:20:33: note: in expansion of macro 'OnlyAddon'
+12:31:52.109 npm error    20 | #define UseAddon Addon* addon = OnlyAddon
+12:31:52.109 npm error       |                                 ^~~~~~~~~
+12:31:52.110 npm error ../src/objects/database.cpp:261:9: note: in expansion of macro 'UseAddon'
+12:31:52.110 npm error   261 |         UseAddon;
+12:31:52.110 npm error       |         ^~~~~~~~
+12:31:52.110 npm error In file included from /vercel/.cache/node-gyp/26.13.0/include/node/v8.h:32,
+12:31:52.110 npm error                  from /vercel/.cache/node-gyp/26.13.0/include/node/node.h:74,
+12:31:52.110 npm error                  from ../src/better_sqlite3.cpp:11:
+12:31:52.111 npm error /vercel/.cache/node-gyp/26.13.0/include/node/v8-external.h:55:9: note: declared here
+12:31:52.111 npm error    55 |   void* Value() const { return Value(kExternalPointerTypeTagDefault); }
+12:31:52.111 npm error       |         ^~~~~
+12:31:52.111 npm error In file included from ../src/better_sqlite3.cpp:45:
+12:31:52.112 npm error ../src/objects/database.cpp: In static member function 'static void Database::JS_open(v8::Local<v8::Name>, const v8::PropertyCallbackInfo<v8::Value>&)':
+12:31:52.112 npm error ../src/objects/database.cpp:411:57: error: 'const class v8::PropertyCallbackInfo<v8::Value>' has no member named 'This'
+12:31:52.112 npm error   411 |         info.GetReturnValue().Set(Unwrap<Database>(info.This())->open);
+12:31:52.112 npm error       |                                                         ^~~~
+12:31:52.112 npm error ../src/objects/database.cpp: In static member function 'static void Database::JS_inTransaction(v8::Local<v8::Name>, const v8::PropertyCallbackInfo<v8::Value>&)':
+12:31:52.112 npm error ../src/objects/database.cpp:415:46: error: 'const class v8::PropertyCallbackInfo<v8::Value>' has no member named 'This'
+12:31:52.113 npm error   415 |         Database* db = Unwrap<Database>(info.This());
+12:31:52.113 npm error       |                                              ^~~~
+12:31:52.113 npm error In file included from ../src/better_sqlite3.cpp:21:
+12:31:52.115 npm error ../src/objects/statement-iterator.cpp: In static member function 'static void StatementIterator::JS_new(const v8::FunctionCallbackInfo<v8::Value>&)':
+12:31:52.115 npm error ../src/util/macros.cpp:17:76: warning: 'void* v8::External::Value() const' is deprecated: Use the version with the type tag. [-Wdeprecated-declarations]
+12:31:52.115 npm error    17 | #define OnlyAddon static_cast<Addon*>(info.Data().As<v8::External>()->Value())
+12:31:52.115 npm error       |                                       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~
+12:31:52.115 npm error ../src/util/macros.cpp:20:33: note: in expansion of macro 'OnlyAddon'
+12:31:52.116 npm error    20 | #define UseAddon Addon* addon = OnlyAddon
+12:31:52.116 npm error       |                                 ^~~~~~~~~
+12:31:52.116 npm error ../src/objects/statement-iterator.cpp:79:9: note: in expansion of macro 'UseAddon'
+12:31:52.116 npm error    79 |         UseAddon;
+12:31:52.116 npm error       |         ^~~~~~~~
+12:31:52.116 npm error In file included from /vercel/.cache/node-gyp/26.13.0/include/node/v8.h:32,
+12:31:52.116 npm error                  from /vercel/.cache/node-gyp/26.13.0/include/node/node.h:74,
+12:31:52.117 npm error                  from ../src/better_sqlite3.cpp:11:
+12:31:52.117 npm error /vercel/.cache/node-gyp/26.13.0/include/node/v8-external.h:55:9: note: declared here
+12:31:52.118 npm error    55 |   void* Value() const { return Value(kExternalPointerTypeTagDefault); }
+12:31:52.118 npm error       |         ^~~~~
+12:31:52.118 npm error In file included from ../src/better_sqlite3.cpp:11:
+12:31:52.118 npm error ../src/better_sqlite3.cpp: At global scope:
+12:31:52.118 npm error /vercel/.cache/node-gyp/26.13.0/include/node/node.h:1395:7: warning: cast between incompatible function types from 'void (*)(v8::Local<v8::Object>, v8::Local<v8::Value>, v8::Local<v8::Context>)' to 'node::addon_context_register_func' {aka 'void (*)(v8::Local<v8::Object>, v8::Local<v8::Value>, v8::Local<v8::Context>, void*)'} [-Wcast-function-type]
+12:31:52.118 npm error  1395 |       (node::addon_context_register_func) (regfunc),                  \
+12:31:52.118 npm error       |       ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+12:31:52.118 npm error /vercel/.cache/node-gyp/26.13.0/include/node/node.h:1413:3: note: in expansion of macro 'NODE_MODULE_CONTEXT_AWARE_X'
+12:31:52.119 npm error  1413 |   NODE_MODULE_CONTEXT_AWARE_X(modname, regfunc, NULL, 0)
+12:31:52.119 npm error       |   ^~~~~~~~~~~~~~~~~~~~~~~~~~~
+12:31:52.120 npm error /vercel/.cache/node-gyp/26.13.0/include/node/node.h:1444:3: note: in expansion of macro 'NODE_MODULE_CONTEXT_AWARE'
+12:31:52.120 npm error  1444 |   NODE_MODULE_CONTEXT_AWARE(NODE_GYP_MODULE_NAME,                     \
+12:31:52.120 npm error       |   ^~~~~~~~~~~~~~~~~~~~~~~~~
+12:31:52.120 npm error ../src/better_sqlite3.cpp:48:1: note: in expansion of macro 'NODE_MODULE_INIT'
+12:31:52.120 npm error    48 | NODE_MODULE_INIT(/* exports, context */) {
+12:31:52.120 npm error       | ^~~~~~~~~~~~~~~~
+12:31:52.121 npm error ../src/better_sqlite3.cpp: In function 'void node_register_module_v147(v8::Local<v8::Object>, v8::Local<v8::Value>, v8::Local<v8::Context>)':
+12:31:52.121 npm error ../src/better_sqlite3.cpp:60:57: warning: 'static v8::Local<v8::External> v8::External::New(v8::Isolate*, void*)' is deprecated: Use the version with the type tag. [-Wdeprecated-declarations]
+12:31:52.121 npm error    60 |         v8::Local<v8::External> data = v8::External::New(isolate, addon);
+12:31:52.121 npm error       |                                        ~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~
+12:31:52.121 npm error In file included from /vercel/.cache/node-gyp/26.13.0/include/node/v8.h:32,
+12:31:52.122 npm error                  from /vercel/.cache/node-gyp/26.13.0/include/node/node.h:74,
+12:31:52.123 npm error                  from ../src/better_sqlite3.cpp:11:
+12:31:52.123 npm error /vercel/.cache/node-gyp/26.13.0/include/node/v8-external.h:32:26: note: declared here
+12:31:52.123 npm error    32 |   static Local<External> New(Isolate* isolate, void* value) {
+12:31:52.123 npm error       |                          ^~~
+12:31:52.123 npm error In file included from ../src/better_sqlite3.cpp:26:
+12:31:52.123 npm error ../src/util/data.cpp: In function 'v8::Local<v8::Value> Data::GetValueJS(v8::Isolate*, sqlite3_stmt*, int, bool)':
+12:31:52.123 npm error ../src/util/data.cpp:36:17: warning: this statement may fall through [-Wimplicit-fallthrough=]
+12:31:52.123 npm error    36 |                 if (safe_ints) {                                                       \
+12:31:52.123 npm error       |                 ^~
+12:31:52.123 npm error ../src/util/data.cpp:73:17: note: in expansion of macro 'SQLITE_VALUE_TO_JS'
+12:31:52.123 npm error    73 |                 SQLITE_VALUE_TO_JS(column, isolate, safe_ints, handle, column);
+12:31:52.124 npm error       |                 ^~~~~~~~~~~~~~~~~~
+12:31:52.124 npm error ../src/util/data.cpp:42:9: note: here
+12:31:52.124 npm error    42 |         case SQLITE_FLOAT:                                                         \
+12:31:52.124 npm error       |         ^~~~
+12:31:52.124 npm error ../src/util/data.cpp:73:17: note: in expansion of macro 'SQLITE_VALUE_TO_JS'
+12:31:52.124 npm error    73 |                 SQLITE_VALUE_TO_JS(column, isolate, safe_ints, handle, column);
+12:31:52.124 npm error       |                 ^~~~~~~~~~~~~~~~~~
+12:31:52.124 npm error ../src/util/data.cpp: In function 'v8::Local<v8::Value> Data::GetValueJS(v8::Isolate*, sqlite3_value*, bool)':
+12:31:52.124 npm error ../src/util/data.cpp:36:17: warning: this statement may fall through [-Wimplicit-fallthrough=]
+12:31:52.124 npm error    36 |                 if (safe_ints) {                                                       \
+12:31:52.124 npm error       |                 ^~
+12:31:52.124 npm error ../src/util/data.cpp:77:17: note: in expansion of macro 'SQLITE_VALUE_TO_JS'
+12:31:52.124 npm error    77 |                 SQLITE_VALUE_TO_JS(value, isolate, safe_ints, value);
+12:31:52.124 npm error       |                 ^~~~~~~~~~~~~~~~~~
+12:31:52.124 npm error ../src/util/data.cpp:42:9: note: here
+12:31:52.124 npm error    42 |         case SQLITE_FLOAT:                                                         \
+12:31:52.124 npm error       |         ^~~~
+12:31:52.124 npm error ../src/util/data.cpp:77:17: note: in expansion of macro 'SQLITE_VALUE_TO_JS'
+12:31:52.124 npm error    77 |                 SQLITE_VALUE_TO_JS(value, isolate, safe_ints, value);
+12:31:52.124 npm error       |                 ^~~~~~~~~~~~~~~~~~
+12:31:52.124 npm error make: *** [better_sqlite3.target.mk:122: Release/obj.target/better_sqlite3/src/better_sqlite3.o] Error 1
+12:31:52.124 npm error gyp ERR! build error 
+12:31:52.124 npm error gyp ERR! stack Error: `make` failed with exit code: 2
+12:31:52.124 npm error gyp ERR! stack at ChildProcess.<anonymous> (/node26/lib/node_modules/npm/node_modules/node-gyp/lib/build.js:219:23)
+12:31:52.124 npm error gyp ERR! System Linux 6.18.56
+12:31:52.124 npm error gyp ERR! command "/node26/bin/node" "/node26/lib/node_modules/npm/node_modules/node-gyp/bin/node-gyp.js" "rebuild" "--release"
+12:31:52.124 npm error gyp ERR! cwd /vercel/path0/node_modules/better-sqlite3
+12:31:52.124 npm error gyp ERR! node -v v26.13.0
+12:31:52.125 npm error gyp ERR! node-gyp -v v12.4.0
+12:31:52.125 npm error gyp ERR! $npm_package_name better-sqlite3
+12:31:52.125 npm error gyp ERR! $npm_package_version 12.6.2
+12:31:52.125 npm error gyp ERR! not ok
+12:31:52.126 npm error A complete log of this run can be found in: /vercel/.npm/_logs/2026-11-06T11_30_13_244Z-debug-0.log
+12:31:52.158 Error: [BUILD_UTILS_SPAWN_1] Command "npm install" exited with 1
